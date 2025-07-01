@@ -234,6 +234,18 @@
       letter-spacing: 0.5px;
     }
 
+    .retencao-tecnica {
+      background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+      color: white;
+      font-weight: 600;
+      text-align: center;
+      padding: 15px;
+      border-radius: 12px;
+      margin: 20px 0;
+      font-size: 1.1em;
+      box-shadow: 0 8px 20px rgba(255, 193, 7, 0.3);
+    }
+
     @media (max-width: 768px) {
       .container {
         padding: 20px;
@@ -284,6 +296,22 @@
       border-color: #ffc107;
       background-color: #fff9e6;
     }
+
+    /* Destaque para Retenção Técnica */
+    .retencao-tecnica-row {
+      background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+      border-left: 4px solid #ffc107;
+    }
+
+    .retencao-tecnica-row td {
+      font-weight: 600;
+      color: #856404;
+    }
+
+    .retencao-tecnica-row .imposto-name {
+      color: #856404;
+      font-size: 1.05em;
+    }
   </style>
 </head>
 <body>
@@ -311,6 +339,7 @@
     </div>
 
     <div class="subtotal" id="subtotalTrio"></div>
+    <div class="retencao-tecnica" id="retencaoTecnica"></div>
 
     <div class="btn-container">
       <button class="btn" onclick="calcularImpostos()">🧮 Calcular Impostos</button>
@@ -321,12 +350,13 @@
 
   <script>
     const impostos = [
-      { nome: 'INSS', aliquota: 11.00, editavel: true },
-      { nome: 'ISS', aliquota: 5.00, editavel: true },
+      { nome: 'INSS', aliquota: '', editavel: true },
+      { nome: 'ISS', aliquota: '', editavel: true },
       { nome: 'PIS', aliquota: 0.65 },
       { nome: 'COFINS', aliquota: 3.00 },
       { nome: 'CSLL', aliquota: 1.00 },
-      { nome: 'IR', aliquota: 1.50 }
+      { nome: 'IR', aliquota: 1.50, selectOptions: true },
+      { nome: 'RETENÇÃO TÉCNICA', aliquota: '', editavel: true, especial: true }
     ];
 
     function criarTabela() {
@@ -335,19 +365,28 @@
 
       impostos.forEach((imposto, i) => {
         const tr = document.createElement('tr');
+        
+        // Adicionar classe especial para Retenção Técnica
+        if (imposto.especial) {
+          tr.classList.add('retencao-tecnica-row');
+        }
+
         let aliquotaInput;
 
-        if (imposto.nome === 'IR') {
+        if (imposto.selectOptions) {
+          // Select para IR
           aliquotaInput = `
             <select id="aliquota_${i}">
               <option value="1.00"${imposto.aliquota === 1.00 ? ' selected' : ''}>1,00%</option>
               <option value="1.50"${imposto.aliquota === 1.50 ? ' selected' : ''}>1,50%</option>
             </select>
           `;
+        } else if (imposto.aliquota === '') {
+          // Input vazio para campos editáveis
+          aliquotaInput = `<input type="number" id="aliquota_${i}" value="" placeholder="0,00" step="0.01" />`;
         } else {
-          aliquotaInput = `
-            <input type="number" id="aliquota_${i}" value="${imposto.aliquota.toFixed(2)}" ${imposto.editavel ? '' : 'readonly'} step="0.01" />
-          `;
+          // Input com valor pré-definido para PIS, COFINS, CSLL
+          aliquotaInput = `<input type="number" id="aliquota_${i}" value="${imposto.aliquota.toFixed(2)}" step="0.01" />`;
         }
 
         tr.innerHTML = `
@@ -365,19 +404,12 @@
       const valorBruto = parseFloat(document.getElementById('valorBruto').value) || 0;
       let totalRetido = 0;
       let subtotalTrio = 0;
+      let retencaoTecnicaValor = 0;
 
       impostos.forEach((imposto, i) => {
         const base = parseFloat(document.getElementById(`base_${i}`).value) || valorBruto;
         const retem = document.getElementById(`retem_${i}`).value.trim().toLowerCase();
-
-        let aliquotaInput = document.getElementById(`aliquota_${i}`);
-        let aliquota = 0;
-
-        if (imposto.nome === 'IR') {
-          aliquota = parseFloat(aliquotaInput.value);
-        } else {
-          aliquota = parseFloat(aliquotaInput.value) || 0;
-        }
+        const aliquota = parseFloat(document.getElementById(`aliquota_${i}`).value) || 0;
 
         let valor = (base * aliquota) / 100;
         valor = Math.round(valor * 100) / 100;
@@ -390,28 +422,35 @@
           document.getElementById(`valor_${i}`).innerText = '-';
         }
 
+        // Separar PIS/COFINS/CSLL
         if (['PIS', 'COFINS', 'CSLL'].includes(imposto.nome) && retem === 'x') {
           subtotalTrio += valor;
         }
+
+        // Separar Retenção Técnica
+        if (imposto.nome === 'RETENÇÃO TÉCNICA' && retem === 'x') {
+          retencaoTecnicaValor += valor;
+        }
       });
 
+      // Atualizar displays
       document.getElementById('resultado').innerText = `🎯 Valor líquido a receber: R$ ${(valorBruto - totalRetido).toFixed(2).replace('.', ',')}`;
       document.getElementById('subtotalTrio').innerText = `📈 Subtotal PIS/COFINS/CSLL: R$ ${subtotalTrio.toFixed(2).replace('.', ',')}`;
+      document.getElementById('retencaoTecnica').innerText = `🔧 Retenção Técnica: R$ ${retencaoTecnicaValor.toFixed(2).replace('.', ',')}`;
     }
 
     // Auto-calcular quando qualquer input mudar
     document.getElementById('valorBruto').addEventListener('input', calcularImpostos);
     
-    // Adicionar listeners para os campos de retenção
+    // Adicionar listeners para todos os campos
     document.addEventListener('input', function(e) {
-      if (e.target.id.startsWith('retem_')) {
+      if (e.target.id.startsWith('retem_') || e.target.id.startsWith('aliquota_') || e.target.id.startsWith('base_')) {
         calcularImpostos();
       }
     });
 
     // Inicializar
     criarTabela();
-    // Não calcular automaticamente no início
   </script>
 </body>
 </html>
