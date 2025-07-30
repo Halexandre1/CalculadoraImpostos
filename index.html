@@ -5,6 +5,44 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Calculadora de Impostos - Nota Fiscal</title>
   <style>
+    :root {
+      /* --- Variáveis de Cores (Tema Claro) --- */
+      --bg-grad-start: #667eea;
+      --bg-grad-end: #764ba2;
+      --container-bg: rgba(255, 255, 255, 0.95);
+      --text-color: #2c3e50;
+      --input-section-bg: #f8f9fa;
+      --input-section-text: #495057;
+      --input-bg: white;
+      --input-border: #dee2e6;
+      --table-header-bg-start: #667eea;
+      --table-header-bg-end: #764ba2;
+      --table-header-text: white;
+      --table-row-hover: #f8f9ff;
+      --table-row-even: #fbfcff;
+      --table-border: #f1f3f4;
+      --footer-text: #777;
+    }
+
+    /* --- Tema Escuro --- */
+    body.dark-mode {
+      --bg-grad-start: #2c3e50;
+      --bg-grad-end: #4b6cb7;
+      --container-bg: rgba(44, 62, 80, 0.85);
+      --text-color: #ecf0f1;
+      --input-section-bg: #34495e;
+      --input-section-text: #bdc3c7;
+      --input-bg: #2c3e50;
+      --input-border: #566573;
+      --table-header-bg-start: #4b6cb7;
+      --table-header-bg-end: #182848;
+      --table-header-text: #ecf0f1;
+      --table-row-hover: #3b536d;
+      --table-row-even: #34495e;
+      --table-border: #4a6078;
+      --footer-text: #95a5a6;
+    }
+    
     * {
       margin: 0;
       padding: 0;
@@ -13,48 +51,76 @@
 
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, var(--bg-grad-start) 0%, var(--bg-grad-end) 100%);
       min-height: 100vh;
-      padding: 16px; /* Aumentado um pouco o padding para melhor visualização */
+      padding: 16px;
       display: flex;
       align-items: center;
       justify-content: center;
+      transition: background 0.3s ease;
     }
 
     .container {
-      /* AJUSTE PRINCIPAL: Um valor equilibrado para o tamanho máximo */
       max-width: min(800px, 95vw); 
       width: 100%;
-      background: rgba(255, 255, 255, 0.95);
+      background: var(--container-bg);
+      color: var(--text-color);
       backdrop-filter: blur(10px);
-      padding: clamp(15px, 3vw, 25px); /* Aumentado o padding interno */
+      padding: clamp(15px, 3vw, 25px);
       border-radius: clamp(10px, 2vw, 16px);
       box-shadow: 0 15px 30px rgba(0,0,0,0.1);
       border: 1px solid rgba(255,255,255,0.2);
       animation: fadeIn 0.4s ease-out;
+      position: relative; /* Para posicionar o botão de tema */
+      transition: background 0.3s ease, color 0.3s ease;
     }
+
+    /* --- Botão de Tema Escuro --- */
+    .theme-toggle {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        background: none;
+        border: 1px solid var(--input-border);
+        color: var(--text-color);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+    .theme-toggle:hover {
+        transform: scale(1.1);
+        box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+    }
+
 
     h2 {
       text-align: center;
       margin-bottom: clamp(15px, 3vw, 20px);
-      color: #2c3e50;
+      color: var(--text-color);
       font-size: clamp(1.3em, 4vw, 1.9em);
       font-weight: 700;
       text-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
 
     .input-section {
-      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      background: var(--input-section-bg);
       padding: clamp(12px, 2.5vw, 18px);
       border-radius: clamp(8px, 1.5vw, 12px);
       margin-bottom: clamp(15px, 2.5vw, 20px);
       text-align: center;
+      transition: background 0.3s ease;
     }
 
     .input-section label {
       display: block;
       font-weight: 600;
-      color: #495057;
+      color: var(--input-section-text);
       margin-bottom: clamp(6px, 1.2vw, 10px);
       font-size: clamp(0.9em, 2.5vw, 1.1em);
     }
@@ -62,13 +128,14 @@
     #valorBruto {
       width: min(200px, 70vw);
       padding: clamp(8px, 1.8vw, 12px);
-      border: 2px solid #dee2e6;
+      border: 2px solid var(--input-border);
+      color: var(--text-color);
       border-radius: clamp(6px, 1.2vw, 10px);
       font-size: clamp(1em, 2.5vw, 1.2em);
       font-weight: 600;
       text-align: center;
       transition: all 0.3s ease;
-      background: white;
+      background: var(--input-bg);
     }
 
     #valorBruto:focus {
@@ -82,20 +149,20 @@
       border-radius: clamp(8px, 1.5vw, 12px);
       box-shadow: 0 8px 20px rgba(0,0,0,0.08);
       margin: clamp(15px, 2.5vw, 20px) 0;
-      background: white;
+      background: var(--input-bg);
       -webkit-overflow-scrolling: touch;
     }
 
     table {
       width: 100%;
-      min-width: 500px; /* Levemente ajustado para o conteúdo */
+      min-width: 500px;
       border-collapse: collapse;
       overflow: hidden;
     }
 
     th {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
+      background: linear-gradient(135deg, var(--table-header-bg-start) 0%, var(--table-header-bg-end) 100%);
+      color: var(--table-header-text);
       padding: clamp(10px, 1.8vw, 14px) clamp(6px, 1.2vw, 10px);
       text-align: center;
       font-weight: 600;
@@ -108,43 +175,37 @@
     td {
       padding: clamp(8px, 1.5vw, 12px) clamp(6px, 1.2vw, 10px);
       text-align: center;
-      border-bottom: 1px solid #f1f3f4;
+      border-bottom: 1px solid var(--table-border);
       font-weight: 500;
       font-size: clamp(0.8em, 2vw, 0.95em);
       white-space: nowrap;
+      color: var(--text-color);
+      transition: background-color 0.3s ease;
     }
 
     tr:hover td {
-      background-color: #f8f9ff;
-      transition: all 0.2s ease;
+      background-color: var(--table-row-hover);
     }
 
     tr:nth-child(even) td {
-      background-color: #fbfcff;
+      background-color: var(--table-row-even);
     }
 
-    input[type="number"], input[type="text"] {
+    input[type="number"], input[type="text"], select {
       width: clamp(50px, 8vw, 70px);
       padding: clamp(4px, 1vw, 7px);
-      border: 1px solid #e9ecef;
+      border: 1px solid var(--input-border);
+      color: var(--text-color);
       border-radius: clamp(4px, 1vw, 8px);
       text-align: center;
       font-weight: 500;
       transition: all 0.3s ease;
-      background: white;
+      background: var(--input-bg);
       font-size: clamp(0.75em, 1.8vw, 0.9em);
     }
 
     select {
       width: clamp(60px, 9vw, 80px);
-      padding: clamp(4px, 1vw, 7px);
-      border: 1px solid #e9ecef;
-      border-radius: clamp(4px, 1vw, 8px);
-      text-align: center;
-      font-weight: 500;
-      transition: all 0.3s ease;
-      background: white;
-      font-size: clamp(0.75em, 1.8vw, 0.9em);
       cursor: pointer;
       padding-right: clamp(15px, 3vw, 20px);
     }
@@ -176,9 +237,7 @@
       box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
     }
 
-    .btn-container {
-      text-align: center;
-    }
+    .btn-container { text-align: center; }
 
     .resultado {
       background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
@@ -216,12 +275,12 @@
 
     .valor-cell {
       font-weight: 600;
-      color: #495057;
+      color: var(--input-section-text);
     }
 
     .imposto-name {
       font-weight: 600;
-      color: #2c3e50;
+      color: var(--text-color);
       text-transform: uppercase;
       letter-spacing: 0.2px;
     }
@@ -230,14 +289,36 @@
       background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
       border-left: 4px solid #ffc107;
     }
+    
+    body.dark-mode .retencao-tecnica-row {
+        background: linear-gradient(135deg, #5c4d21 0%, #6b4f0c 100%);
+        border-left: 4px solid #ffc107;
+    }
 
     .retencao-tecnica-row td {
       font-weight: 600;
       color: #856404;
     }
+    
+    body.dark-mode .retencao-tecnica-row td {
+        color: #ffc107;
+    }
 
     .retencao-tecnica-row .imposto-name {
       color: #856404;
+    }
+    
+    body.dark-mode .retencao-tecnica-row .imposto-name {
+        color: #ffc107;
+    }
+
+    footer {
+        text-align: center;
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid var(--input-border);
+        font-size: 14px;
+        color: var(--footer-text);
     }
 
     @keyframes fadeIn {
@@ -250,13 +331,11 @@
         transform: translateY(0);
       }
     }
-    
-    /* REMOVIDO o media query para telas > 1200px para simplificar */
-
   </style>
 </head>
 <body>
   <div class="container">
+    <button class="theme-toggle" id="themeToggle" aria-label="Alternar tema">🌙</button>
     <h2>💰 Calculadora de Impostos</h2>
     
     <div class="input-section">
@@ -287,6 +366,11 @@
     </div>
 
     <div class="resultado" id="resultado"></div>
+    
+    <!-- Assinatura com data fixa -->
+    <footer>
+        <p>Feito por HAlexandre em 29/07/2025 às 22:50</p>
+    </footer>
   </div>
 
   <script>
@@ -335,7 +419,6 @@
         `;
         tbody.appendChild(tr);
       });
-      // Preencher o resultado inicial
       calcularImpostos(); 
     }
 
@@ -375,6 +458,34 @@
       document.getElementById('subtotalTrio').innerText = `📈 Subtotal PIS/COFINS/CSLL: R$ ${subtotalTrio.toFixed(2).replace('.', ',')}`;
       document.getElementById('retencaoTecnica').innerText = `🔧 Retenção Técnica: R$ ${retencaoTecnicaValor.toFixed(2).replace('.', ',')}`;
     }
+    
+    // --- LÓGICA PARA TEMA ESCURO ---
+    const themeToggle = document.getElementById('themeToggle');
+    const body = document.body;
+    
+    themeToggle.addEventListener('click', () => {
+        body.classList.toggle('dark-mode');
+        // Salva a preferência do utilizador
+        if (body.classList.contains('dark-mode')) {
+            localStorage.setItem('theme', 'dark');
+            themeToggle.textContent = '☀️';
+        } else {
+            localStorage.setItem('theme', 'light');
+            themeToggle.textContent = '🌙';
+        }
+    });
+
+    function loadTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-mode');
+            themeToggle.textContent = '☀️';
+        } else {
+            themeToggle.textContent = '🌙';
+        }
+    }
+
+    // --- FIM DA LÓGICA ADICIONAL ---
 
     document.getElementById('valorBruto').addEventListener('input', calcularImpostos);
     
@@ -384,8 +495,9 @@
       }
     });
 
-    // Inicializar a tabela e o cálculo
+    // Inicializar a tabela, cálculo e tema
     criarTabela();
+    loadTheme();
   </script>
 </body>
 </html>
