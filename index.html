@@ -71,7 +71,7 @@
       box-shadow: 0 15px 30px rgba(0,0,0,0.1);
       border: 1px solid rgba(255,255,255,0.2);
       animation: fadeIn 0.4s ease-out;
-      position: relative; /* Para posicionar o botão de tema */
+      position: relative;
       transition: background 0.3s ease, color 0.3s ease;
     }
 
@@ -98,10 +98,16 @@
         box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
     }
 
+    .header-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: clamp(15px, 3vw, 20px);
+    }
 
     h2 {
       text-align: center;
-      margin-bottom: clamp(15px, 3vw, 20px);
       color: var(--text-color);
       font-size: clamp(1.3em, 4vw, 1.9em);
       font-weight: 700;
@@ -216,36 +222,13 @@
       box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
     }
 
-    .btn {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: clamp(10px, 2.2vw, 14px) clamp(20px, 4.5vw, 30px);
-      border: none;
-      border-radius: clamp(6px, 1.5vw, 10px);
-      margin: clamp(15px, 2.5vw, 20px) 0;
-      font-size: clamp(0.9em, 2.2vw, 1.1em);
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      box-shadow: 0 6px 15px rgba(102, 126, 234, 0.3);
-    }
-
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-    }
-
-    .btn-container { text-align: center; }
-
     .resultado {
       background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
       color: white;
       text-align: center;
       font-size: clamp(1em, 2.8vw, 1.3em);
       font-weight: 700;
-      margin-top: clamp(15px, 2.5vw, 20px);
+      margin-bottom: clamp(15px, 2.5vw, 20px);
       padding: clamp(10px, 2.2vw, 14px);
       border-radius: clamp(6px, 1.5vw, 10px);
       box-shadow: 0 6px 15px rgba(40, 167, 69, 0.3);
@@ -336,12 +319,19 @@
 <body>
   <div class="container">
     <button class="theme-toggle" id="themeToggle" aria-label="Alternar tema">🌙</button>
-    <h2>💰 Calculadora de Impostos</h2>
+    <div class="header-container">
+      <img src="https://raw.githubusercontent.com/Halexandre1/PDF_PRO/main/HERBERT.jpg" alt="Logótipo" class="w-12 h-12 rounded-full object-cover" style="width: 48px; height: 48px;">
+      <h2>💰 Calculadora de Impostos</h2>
+    </div>
     
     <div class="input-section">
       <label><strong>💵 Valor Bruto da Nota (R$):</strong></label>
-      <input type="number" id="valorBruto" value="1000" placeholder="Digite o valor" />
+      <input type="number" id="valorBruto" value="1000" placeholder="Digite o valor" step="0.01" />
     </div>
+
+    <div class="subtotal" id="subtotalTrio"></div>
+    <div class="retencao-tecnica" id="retencaoTecnica"></div>
+    <div class="resultado" id="resultado"></div>
 
     <div class="table-container">
       <table>
@@ -350,154 +340,238 @@
             <th>📋 Imposto</th>
             <th>💰 Base Reduzida (R$)</th>
             <th>📊 Alíquota (%)</th>
-            <th>✋ Retém?</th>
+            <th>✋ Retém? (x)</th>
             <th>💸 Valor (R$)</th>
           </tr>
         </thead>
         <tbody id="tabelaImpostos"></tbody>
       </table>
     </div>
-
-    <div class="subtotal" id="subtotalTrio"></div>
-    <div class="retencao-tecnica" id="retencaoTecnica"></div>
-
-    <div class="btn-container">
-      <button class="btn" onclick="calcularImpostos()">🧮 Calcular Impostos</button>
-    </div>
-
-    <div class="resultado" id="resultado"></div>
     
-    <!-- Assinatura com data fixa -->
-    <footer>
-        <p>Feito por HAlexandre em 29/07/2025 às 22:50</p>
-    </footer>
+    <footer id="signature"></footer>
   </div>
 
   <script>
-    const impostos = [
-      { nome: 'INSS', aliquota: '', editavel: true },
-      { nome: 'ISS', aliquota: '', editavel: true },
-      { nome: 'PIS', aliquota: 0.65 },
-      { nome: 'COFINS', aliquota: 3.00 },
-      { nome: 'CSLL', aliquota: 1.00 },
-      { nome: 'IR', aliquota: 1.50, selectOptions: true },
-      { nome: 'RETENÇÃO TÉCNICA', aliquota: '', editavel: true, especial: true }
-    ];
+    /**
+     * @file Calculadora de Impostos - Versão Refatorada
+     * @author HAlexandre
+     * @version 2.2.0
+     */
 
-    function criarTabela() {
-      const tbody = document.getElementById('tabelaImpostos');
-      tbody.innerHTML = '';
+    // --- Módulo de Configuração e Estado ---
+    const AppState = {
+      impostos: [
+        { nome: 'INSS', aliquota: 0, retem: '' },
+        { nome: 'ISS', aliquota: 0, retem: '' },
+        { nome: 'PIS', aliquota: 0.65, retem: 'x' },
+        { nome: 'COFINS', aliquota: 3.00, retem: 'x' },
+        { nome: 'CSLL', aliquota: 1.00, retem: 'x' },
+        { nome: 'IR', aliquota: 1.50, retem: 'x', selectOptions: [1.00, 1.50] },
+        { nome: 'RETENÇÃO TÉCNICA', aliquota: 0, retem: '', especial: true }
+      ],
+      
+      /**
+       * Salva as configurações atuais dos impostos no localStorage.
+       */
+      salvarConfiguracoes() {
+        const configParaSalvar = this.impostos.map(imposto => ({
+          nome: imposto.nome,
+          aliquota: imposto.aliquota,
+          retem: imposto.retem
+        }));
+        localStorage.setItem('configImpostos', JSON.stringify(configParaSalvar));
+      },
 
-      impostos.forEach((imposto, i) => {
-        const tr = document.createElement('tr');
-        
-        if (imposto.especial) {
-          tr.classList.add('retencao-tecnica-row');
+      /**
+       * Carrega as configurações dos impostos do localStorage.
+       */
+      carregarConfiguracoes() {
+        const configSalva = JSON.parse(localStorage.getItem('configImpostos'));
+        if (configSalva) {
+          this.impostos.forEach(imposto => {
+            const salvo = configSalva.find(s => s.nome === imposto.nome);
+            if (salvo) {
+              imposto.aliquota = salvo.aliquota;
+              imposto.retem = salvo.retem;
+            }
+          });
         }
+      }
+    };
 
-        let aliquotaInput;
+    // --- Módulo de UI ---
+    const UI = {
+      dom: {
+        tabelaImpostos: document.getElementById('tabelaImpostos'),
+        valorBruto: document.getElementById('valorBruto'),
+        resultado: document.getElementById('resultado'),
+        subtotalTrio: document.getElementById('subtotalTrio'),
+        retencaoTecnica: document.getElementById('retencaoTecnica'),
+        themeToggle: document.getElementById('themeToggle'),
+        body: document.body,
+        signature: document.getElementById('signature'),
+      },
+      
+      /**
+       * Formata um número como moeda brasileira (BRL).
+       * @param {number} valor - O número a ser formatado.
+       * @returns {string} O valor formatado como string (ex: "R$ 1.234,56").
+       */
+      formatarMoeda(valor) {
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
+      },
 
-        if (imposto.selectOptions) {
-          aliquotaInput = `
-            <select id="aliquota_${i}">
-              <option value="1.00"${imposto.aliquota === 1.00 ? ' selected' : ''}>1,00%</option>
-              <option value="1.50"${imposto.aliquota === 1.50 ? ' selected' : ''}>1,50%</option>
-            </select>
+      /**
+       * Cria e renderiza a tabela de impostos na interface.
+       */
+      criarTabela() {
+        this.dom.tabelaImpostos.innerHTML = '';
+        AppState.impostos.forEach((imposto, i) => {
+          const tr = document.createElement('tr');
+          if (imposto.especial) tr.classList.add('retencao-tecnica-row');
+
+          let aliquotaInput;
+          if (imposto.selectOptions) {
+            const options = imposto.selectOptions.map(opt => 
+              `<option value="${opt}"${imposto.aliquota === opt ? ' selected' : ''}>${opt.toFixed(2).replace('.', ',')}%</option>`
+            ).join('');
+            aliquotaInput = `<select id="aliquota_${i}" data-index="${i}">${options}</select>`;
+          } else {
+            aliquotaInput = `<input type="number" id="aliquota_${i}" data-index="${i}" value="${imposto.aliquota.toFixed(2)}" placeholder="0,00" step="0.01" />`;
+          }
+
+          tr.innerHTML = `
+            <td class="imposto-name">${imposto.nome}</td>
+            <td><input type="number" id="base_${i}" data-index="${i}" step="0.01" placeholder="Auto" /></td>
+            <td>${aliquotaInput}</td>
+            <td><input type="text" id="retem_${i}" data-index="${i}" value="${imposto.retem}" maxlength="1" placeholder="-" /></td>
+            <td class="valor-cell" id="valor_${i}">-</td>
           `;
-        } else if (imposto.aliquota === '') {
-          aliquotaInput = `<input type="number" id="aliquota_${i}" value="" placeholder="0,00" step="0.01" />`;
-        } else {
-          aliquotaInput = `<input type="number" id="aliquota_${i}" value="${imposto.aliquota.toFixed(2)}" step="0.01" />`;
-        }
+          this.dom.tabelaImpostos.appendChild(tr);
+        });
+      },
 
-        tr.innerHTML = `
-          <td class="imposto-name">${imposto.nome}</td>
-          <td><input type="number" id="base_${i}" step="0.01" placeholder="Auto" /></td>
-          <td>${aliquotaInput}</td>
-          <td><input type="text" id="retem_${i}" maxlength="1" placeholder="" /></td>
-          <td class="valor-cell" id="valor_${i}">-</td>
-        `;
-        tbody.appendChild(tr);
-      });
-      calcularImpostos(); 
-    }
+      /**
+       * Atualiza os campos de resultado na interface.
+       * @param {object} resultados - Objeto contendo os valores calculados.
+       */
+      atualizarResultados(resultados) {
+        this.dom.resultado.innerText = `🎯 Valor líquido a receber: ${this.formatarMoeda(resultados.valorLiquido)}`;
+        this.dom.subtotalTrio.innerText = `📈 Subtotal PIS/COFINS/CSLL: ${this.formatarMoeda(resultados.subtotalTrio)}`;
+        this.dom.retencaoTecnica.innerText = `🔧 Retenção Técnica: ${this.formatarMoeda(resultados.retencaoTecnicaValor)}`;
 
-    function calcularImpostos() {
-      const valorBruto = parseFloat(document.getElementById('valorBruto').value) || 0;
-      let totalRetido = 0;
-      let subtotalTrio = 0;
-      let retencaoTecnicaValor = 0;
+        resultados.valoresImpostos.forEach((valor, i) => {
+          const el = document.getElementById(`valor_${i}`);
+          if (el) {
+            el.innerText = valor > 0 ? this.formatarMoeda(valor) : '-';
+          }
+        });
+      },
 
-      impostos.forEach((imposto, i) => {
-        const baseInput = document.getElementById(`base_${i}`);
-        const base = parseFloat(baseInput.value) || valorBruto;
-        
-        const retem = document.getElementById(`retem_${i}`).value.trim().toLowerCase();
-        const aliquota = parseFloat(document.getElementById(`aliquota_${i}`).value) || 0;
-
-        let valor = (base * aliquota) / 100;
-        valor = Math.round(valor * 100) / 100;
-
-        if (retem === 'x') {
-          document.getElementById(`valor_${i}`).innerText = `R$ ${valor.toFixed(2).replace('.', ',')}`;
-          totalRetido += valor;
-        } else {
-          document.getElementById(`valor_${i}`).innerText = '-';
-        }
-
-        if (['PIS', 'COFINS', 'CSLL'].includes(imposto.nome) && retem === 'x') {
-          subtotalTrio += valor;
-        }
-
-        if (imposto.nome === 'RETENÇÃO TÉCNICA' && retem === 'x') {
-          retencaoTecnicaValor += valor;
-        }
-      });
-
-      document.getElementById('resultado').innerText = `🎯 Valor líquido a receber: R$ ${(valorBruto - totalRetido).toFixed(2).replace('.', ',')}`;
-      document.getElementById('subtotalTrio').innerText = `📈 Subtotal PIS/COFINS/CSLL: R$ ${subtotalTrio.toFixed(2).replace('.', ',')}`;
-      document.getElementById('retencaoTecnica').innerText = `🔧 Retenção Técnica: R$ ${retencaoTecnicaValor.toFixed(2).replace('.', ',')}`;
-    }
-    
-    // --- LÓGICA PARA TEMA ESCURO ---
-    const themeToggle = document.getElementById('themeToggle');
-    const body = document.body;
-    
-    themeToggle.addEventListener('click', () => {
-        body.classList.toggle('dark-mode');
-        // Salva a preferência do utilizador
-        if (body.classList.contains('dark-mode')) {
-            localStorage.setItem('theme', 'dark');
-            themeToggle.textContent = '☀️';
-        } else {
-            localStorage.setItem('theme', 'light');
-            themeToggle.textContent = '🌙';
-        }
-    });
-
-    function loadTheme() {
+      /**
+       * Carrega e aplica o tema (claro/escuro).
+       */
+      loadTheme() {
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme === 'dark') {
-            body.classList.add('dark-mode');
-            themeToggle.textContent = '☀️';
+          this.dom.body.classList.add('dark-mode');
+          this.dom.themeToggle.textContent = '☀️';
         } else {
-            themeToggle.textContent = '🌙';
+          this.dom.themeToggle.textContent = '🌙';
         }
-    }
+      },
 
-    // --- FIM DA LÓGICA ADICIONAL ---
-
-    document.getElementById('valorBruto').addEventListener('input', calcularImpostos);
-    
-    document.addEventListener('input', function(e) {
-      if (e.target.id.startsWith('retem_') || e.target.id.startsWith('aliquota_') || e.target.id.startsWith('base_')) {
-        calcularImpostos();
+      /**
+       * Define a assinatura dinâmica no rodapé.
+       */
+      setSignature() {
+        const year = new Date().getFullYear();
+        this.dom.signature.innerHTML = `<p>Feito por HAlexandre © ${year}</p>`;
       }
+    };
+
+    // --- Módulo de Cálculo ---
+    const Calculadora = {
+      /**
+       * Executa o cálculo principal dos impostos.
+       */
+      calcular() {
+        const valorBruto = parseFloat(UI.dom.valorBruto.value) || 0;
+        let totalRetido = 0;
+        let subtotalTrio = 0;
+        let retencaoTecnicaValor = 0;
+        const valoresImpostos = [];
+
+        AppState.impostos.forEach((imposto, i) => {
+          const baseInput = document.getElementById(`base_${i}`);
+          const base = parseFloat(baseInput.value) || valorBruto;
+          const retem = document.getElementById(`retem_${i}`).value.trim().toLowerCase();
+          const aliquota = parseFloat(document.getElementById(`aliquota_${i}`).value) || 0;
+          
+          // Atualiza o estado do imposto com os valores da UI
+          imposto.aliquota = aliquota;
+          imposto.retem = retem;
+
+          let valor = 0;
+          if (retem === 'x') {
+            valor = (base * aliquota) / 100;
+            totalRetido += valor;
+            
+            if (['PIS', 'COFINS', 'CSLL'].includes(imposto.nome)) {
+              subtotalTrio += valor;
+            }
+            if (imposto.especial) {
+              retencaoTecnicaValor += valor;
+            }
+          }
+          valoresImpostos.push(valor);
+        });
+
+        const valorLiquido = valorBruto - totalRetido;
+        
+        UI.atualizarResultados({
+          valorLiquido,
+          subtotalTrio,
+          retencaoTecnicaValor,
+          valoresImpostos
+        });
+
+        AppState.salvarConfiguracoes();
+      }
+    };
+
+    // --- Módulo de Eventos ---
+    const Eventos = {
+      /**
+       * Configura todos os event listeners da aplicação.
+       */
+      setup() {
+        UI.dom.tabelaImpostos.addEventListener('input', (e) => {
+          if (e.target.matches('input, select')) {
+            Calculadora.calcular();
+          }
+        });
+        UI.dom.valorBruto.addEventListener('input', Calculadora.calcular);
+        
+        UI.dom.themeToggle.addEventListener('click', () => {
+          UI.dom.body.classList.toggle('dark-mode');
+          const isDark = UI.dom.body.classList.contains('dark-mode');
+          localStorage.setItem('theme', isDark ? 'dark' : 'light');
+          UI.dom.themeToggle.textContent = isDark ? '☀️' : '🌙';
+        });
+      }
+    };
+
+    // --- Inicialização da Aplicação ---
+    document.addEventListener('DOMContentLoaded', () => {
+      AppState.carregarConfiguracoes();
+      UI.criarTabela();
+      UI.loadTheme();
+      UI.setSignature();
+      Eventos.setup();
+      Calculadora.calcular(); // Cálculo inicial
     });
 
-    // Inicializar a tabela, cálculo e tema
-    criarTabela();
-    loadTheme();
   </script>
 </body>
 </html>
