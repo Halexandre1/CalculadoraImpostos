@@ -29,15 +29,33 @@
         </div>
     </header>
     
-    <div class="input-section bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg mb-4 text-center">
-      <label for="valorBruto" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"><strong>💵 Valor Bruto da Nota (R$):</strong></label>
-      <input type="number" id="valorBruto" value="1000" placeholder="Digite o valor" step="0.01" class="w-full max-w-xs mx-auto p-3 text-center text-lg font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        <div class="input-section bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg text-center flex flex-col justify-center">
+          <label for="valorBruto" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"><strong>💵 Valor Bruto da Nota (R$):</strong></label>
+          <input type="number" id="valorBruto" value="1000" placeholder="Digite o valor" step="0.01" class="w-full max-w-xs mx-auto p-3 text-center text-lg font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
+        </div>
+        <div class="grid grid-cols-1 gap-2">
+            <div id="subtotalTrio" class="p-2 rounded-lg text-white text-center font-semibold bg-gradient-to-r from-cyan-500 to-blue-500"></div>
+            <div id="retencaoTecnica" class="p-2 rounded-lg text-white text-center font-semibold bg-gradient-to-r from-amber-500 to-orange-500"></div>
+            <div id="resultado" class="p-2 rounded-lg text-white text-center font-semibold bg-gradient-to-r from-green-500 to-emerald-500"></div>
+        </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <div id="subtotalTrio" class="p-3 rounded-lg text-white text-center font-semibold bg-gradient-to-r from-cyan-500 to-blue-500 flex justify-between items-center text-sm"></div>
-        <div id="retencaoTecnica" class="p-3 rounded-lg text-white text-center font-semibold bg-gradient-to-r from-amber-500 to-orange-500 flex justify-between items-center text-sm"></div>
-        <div id="resultado" class="p-3 rounded-lg text-white text-center font-semibold bg-gradient-to-r from-green-500 to-emerald-500 flex justify-between items-center text-sm"></div>
+    <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+        <label for="simplesNacionalToggle" class="flex items-center cursor-pointer">
+            <div class="relative">
+                <input type="checkbox" id="simplesNacionalToggle" class="sr-only peer">
+                <div class="w-14 h-8 bg-gray-200 rounded-full dark:bg-gray-700 peer-checked:bg-indigo-600 transition"></div>
+                <div class="absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform peer-checked:translate-x-full"></div>
+            </div>
+            <div class="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300">
+                Empresa do Simples Nacional?
+            </div>
+        </label>
+        <div class="flex items-center gap-2">
+             <button id="btnMarcarPadrao" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors">Marcar Padrão</button>
+             <button id="btnMarcarTecnica" class="bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors">Marcar/Desmarcar Ret. Técnica</button>
+        </div>
     </div>
 
     <div class="table-container bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-x-auto">
@@ -47,7 +65,7 @@
             <th scope="col" class="px-6 py-3">📋 Imposto</th>
             <th scope="col" class="px-6 py-3">💰 Base Reduzida (R$)</th>
             <th scope="col" class="px-6 py-3">📊 Alíquota (%)</th>
-            <th scope="col" class="px-6 py-3">✋ Retém? (x)</th>
+            <th scope="col" class="px-6 py-3">✋ Retém?</th>
             <th scope="col" class="px-6 py-3">💸 Valor (R$)</th>
           </tr>
         </thead>
@@ -60,13 +78,15 @@
 
   <script>
     /**
-     * @file Calculadora de Impostos - Versão Refatorada
+     * @file Calculadora de Impostos com Regras de Negócio
      * @author HAlexandre
-     * @version 3.1.0
+     * @version 4.3.1
      */
 
     // --- Módulo de Configuração e Estado ---
     const AppState = {
+      isSimplesNacional: false,
+      retemStateBeforeSimples: {},
       impostos: [
         { nome: 'INSS', aliquota: 0, retem: '' },
         { nome: 'ISS', aliquota: 0, retem: '' },
@@ -78,24 +98,26 @@
       ],
       
       salvarConfiguracoes() {
-        const configParaSalvar = this.impostos.map(imposto => ({
-          nome: imposto.nome,
-          aliquota: imposto.aliquota,
-          retem: imposto.retem
-        }));
-        localStorage.setItem('configImpostos', JSON.stringify(configParaSalvar));
+        const config = {
+            isSimplesNacional: this.isSimplesNacional,
+            impostos: this.impostos.map(imp => ({ nome: imp.nome, aliquota: imp.aliquota, retem: imp.retem }))
+        };
+        localStorage.setItem('configImpostosV2', JSON.stringify(config));
       },
 
       carregarConfiguracoes() {
-        const configSalva = JSON.parse(localStorage.getItem('configImpostos'));
+        const configSalva = JSON.parse(localStorage.getItem('configImpostosV2'));
         if (configSalva) {
-          this.impostos.forEach(imposto => {
-            const salvo = configSalva.find(s => s.nome === imposto.nome);
-            if (salvo) {
-              imposto.aliquota = salvo.aliquota;
-              imposto.retem = salvo.retem;
-            }
-          });
+          this.isSimplesNacional = configSalva.isSimplesNacional || false;
+          if(configSalva.impostos) {
+            this.impostos.forEach(imposto => {
+                const salvo = configSalva.impostos.find(s => s.nome === imposto.nome);
+                if (salvo) {
+                imposto.aliquota = salvo.aliquota;
+                imposto.retem = salvo.retem;
+                }
+            });
+          }
         }
       }
     };
@@ -109,6 +131,9 @@
         subtotalTrio: document.getElementById('subtotalTrio'),
         retencaoTecnica: document.getElementById('retencaoTecnica'),
         themeToggle: document.getElementById('themeToggle'),
+        simplesNacionalToggle: document.getElementById('simplesNacionalToggle'),
+        btnMarcarPadrao: document.getElementById('btnMarcarPadrao'),
+        btnMarcarTecnica: document.getElementById('btnMarcarTecnica'),
         body: document.body,
         signature: document.getElementById('signature'),
       },
@@ -137,7 +162,7 @@
             <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">${imposto.nome}</td>
             <td class="px-6 py-4"><input type="number" id="base_${i}" data-index="${i}" step="0.01" placeholder="Auto" class="w-28 p-2 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-center" /></td>
             <td class="px-6 py-4">${aliquotaInput}</td>
-            <td class="px-6 py-4"><input type="text" id="retem_${i}" data-index="${i}" value="${imposto.retem}" maxlength="1" placeholder="-" class="w-16 p-2 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-center" /></td>
+            <td class="px-6 py-4"><input type="checkbox" id="retem_${i}" data-index="${i}" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" ${imposto.retem === 'x' ? 'checked' : ''} /></td>
             <td class="px-6 py-4 font-semibold" id="valor_${i}">-</td>
           `;
           this.dom.tabelaImpostos.appendChild(tr);
@@ -145,14 +170,18 @@
       },
 
       atualizarResultados(resultados) {
-        this.dom.resultado.innerHTML = `<span>🎯 Líquido:</span> <span>${this.formatarMoeda(resultados.valorLiquido)}</span>`;
-        this.dom.subtotalTrio.innerHTML = `<span>📈 PIS/COFINS/CSLL:</span> <span>${this.formatarMoeda(resultados.subtotalTrio)}</span>`;
-        this.dom.retencaoTecnica.innerHTML = `<span>🔧 Ret. Técnica:</span> <span>${this.formatarMoeda(resultados.retencaoTecnicaValor)}</span>`;
+        this.dom.resultado.innerHTML = `<span class="block text-xs opacity-80">🎯 Líquido:</span> <div class="text-lg font-bold">${this.formatarMoeda(resultados.valorLiquido)}</div>`;
+        this.dom.subtotalTrio.innerHTML = `<span class="block text-xs opacity-80">📈 PIS/COFINS/CSLL:</span> <div class="text-lg font-bold">${this.formatarMoeda(resultados.subtotalTrio)}</div>`;
+        this.dom.retencaoTecnica.innerHTML = `<span class="block text-xs opacity-80">🔧 Ret. Técnica:</span> <div class="text-lg font-bold">${this.formatarMoeda(resultados.retencaoTecnicaValor)}</div>`;
 
-        resultados.valoresImpostos.forEach((valor, i) => {
+        resultados.valoresImpostos.forEach((item, i) => {
           const el = document.getElementById(`valor_${i}`);
           if (el) {
-            el.innerText = valor > 0 ? this.formatarMoeda(valor) : '-';
+            if (item.dispensado) {
+                el.innerHTML = `<span class="text-xs text-yellow-600 dark:text-yellow-400" title="${item.motivoDispensa}">Dispensado</span>`;
+            } else {
+                el.innerText = item.valor > 0 ? this.formatarMoeda(item.valor) : '-';
+            }
           }
         });
       },
@@ -168,8 +197,7 @@
       },
 
       setSignature() {
-        const year = new Date().getFullYear();
-        this.dom.signature.innerHTML = `<p>Feito por HAlexandre © ${year}</p>`;
+        this.dom.signature.innerHTML = `<p>Feito por HAlexandre © ${new Date().getFullYear()}</p>`;
       }
     };
 
@@ -177,42 +205,61 @@
     const Calculadora = {
       calcular() {
         const valorBruto = parseFloat(UI.dom.valorBruto.value) || 0;
-        let totalRetido = 0;
-        let subtotalTrio = 0;
-        let retencaoTecnicaValor = 0;
-        const valoresImpostos = [];
-
+        
+        let valoresCalculados = {};
+        
         AppState.impostos.forEach((imposto, i) => {
-          const baseInput = document.getElementById(`base_${i}`);
-          const base = parseFloat(baseInput.value) || valorBruto;
-          const retem = document.getElementById(`retem_${i}`).value.trim().toLowerCase();
+          const base = parseFloat(document.getElementById(`base_${i}`).value) || valorBruto;
+          const retemCheckbox = document.getElementById(`retem_${i}`);
+          const retem = retemCheckbox.checked;
           const aliquota = parseFloat(document.getElementById(`aliquota_${i}`).value) || 0;
           
           imposto.aliquota = aliquota;
-          imposto.retem = retem;
+          imposto.retem = retem ? 'x' : '';
 
-          let valor = 0;
-          if (retem === 'x') {
-            valor = (base * aliquota) / 100;
-            totalRetido += valor;
-            
-            if (['PIS', 'COFINS', 'CSLL'].includes(imposto.nome)) {
-              subtotalTrio += valor;
-            }
-            if (imposto.especial) {
-              retencaoTecnicaValor += valor;
-            }
-          }
-          valoresImpostos.push(valor);
+          valoresCalculados[imposto.nome] = retem ? (base * aliquota) / 100 : 0;
         });
 
+        const csrfSum = valoresCalculados.PIS + valoresCalculados.COFINS + valoresCalculados.CSLL;
+        const valoresFinais = [];
+        let totalRetido = 0;
+        let subtotalTrio = 0;
+        let retencaoTecnicaValor = 0;
+
+        AppState.impostos.forEach(imposto => {
+            let valorFinal = valoresCalculados[imposto.nome];
+            let dispensado = false;
+            let motivoDispensa = '';
+
+            if (imposto.nome === 'IR' && valorFinal > 0 && valorFinal < 10) {
+                valorFinal = 0;
+                dispensado = true;
+                motivoDispensa = 'Valor do IRRF inferior a R$ 10,00';
+            }
+            if (['PIS', 'COFINS', 'CSLL'].includes(imposto.nome) && csrfSum > 0 && csrfSum < 10) {
+                valorFinal = 0;
+                dispensado = true;
+                motivoDispensa = 'Soma de PIS/COFINS/CSLL inferior a R$ 10,00';
+            }
+
+            valoresFinais.push({ valor: valorFinal, dispensado, motivoDispensa });
+
+            totalRetido += valorFinal;
+            if (['PIS', 'COFINS', 'CSLL'].includes(imposto.nome)) {
+                subtotalTrio += valorFinal;
+            }
+            if (imposto.especial) {
+                retencaoTecnicaValor += valorFinal;
+            }
+        });
+        
         const valorLiquido = valorBruto - totalRetido;
         
         UI.atualizarResultados({
           valorLiquido,
           subtotalTrio,
           retencaoTecnicaValor,
-          valoresImpostos
+          valoresImpostos: valoresFinais
         });
 
         AppState.salvarConfiguracoes();
@@ -229,6 +276,44 @@
         });
         UI.dom.valorBruto.addEventListener('input', Calculadora.calcular);
         
+        UI.dom.simplesNacionalToggle.addEventListener('change', () => {
+            AppState.isSimplesNacional = UI.dom.simplesNacionalToggle.checked;
+            AppState.impostos.forEach((imposto, i) => {
+                if (['PIS', 'COFINS', 'CSLL'].includes(imposto.nome)) {
+                    const retemCheckbox = document.getElementById(`retem_${i}`);
+                    if (AppState.isSimplesNacional) {
+                        AppState.retemStateBeforeSimples[imposto.nome] = retemCheckbox.checked;
+                        retemCheckbox.checked = false;
+                    } else {
+                        retemCheckbox.checked = AppState.retemStateBeforeSimples[imposto.nome] ?? true;
+                    }
+                }
+            });
+            Calculadora.calcular();
+        });
+
+        UI.dom.btnMarcarPadrao.addEventListener('click', () => {
+            const isSimples = UI.dom.simplesNacionalToggle.checked;
+            AppState.impostos.forEach((imposto, i) => {
+                if (!imposto.especial) {
+                    const retemCheckbox = document.getElementById(`retem_${i}`);
+                    const isFederalCSRF = ['PIS', 'COFINS', 'CSLL'].includes(imposto.nome);
+                    retemCheckbox.checked = !(isSimples && isFederalCSRF);
+                }
+            });
+            Calculadora.calcular();
+        });
+
+        UI.dom.btnMarcarTecnica.addEventListener('click', () => {
+            AppState.impostos.forEach((imposto, i) => {
+                if (imposto.especial) {
+                    const retemCheckbox = document.getElementById(`retem_${i}`);
+                    retemCheckbox.checked = !retemCheckbox.checked;
+                }
+            });
+            Calculadora.calcular();
+        });
+        
         UI.dom.themeToggle.addEventListener('click', () => {
           document.documentElement.classList.toggle('dark');
           const isDark = document.documentElement.classList.contains('dark');
@@ -241,6 +326,7 @@
     // --- Inicialização da Aplicação ---
     document.addEventListener('DOMContentLoaded', () => {
       AppState.carregarConfiguracoes();
+      UI.dom.simplesNacionalToggle.checked = AppState.isSimplesNacional;
       UI.criarTabela();
       UI.loadTheme();
       UI.setSignature();
