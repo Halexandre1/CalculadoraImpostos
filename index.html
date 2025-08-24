@@ -18,10 +18,10 @@
 </head>
 <body class="bg-slate-100 dark:bg-gray-900 text-slate-800 dark:text-slate-200 min-h-screen flex items-center justify-center p-4">
 
-  <div class="container bg-white dark:bg-slate-800 p-6 rounded-xl shadow-2xl w-full max-w-4xl relative">
+  <div class="container bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-xl shadow-2xl w-full max-w-4xl relative">
     <button id="themeToggle" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-transform hover:scale-110" aria-label="Alternar tema">🌙</button>
 
-    <header class="mb-6 flex items-center justify-center gap-4">
+    <header class="mb-4 flex items-center justify-center gap-4">
         <img src="https://raw.githubusercontent.com/Halexandre1/PDF_PRO/main/HERBERT.jpg" alt="Logótipo" class="w-12 h-12 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-800">
         <div>
             <h1 class="text-2xl font-bold text-slate-800 dark:text-white text-left">Calculadora de Impostos</h1>
@@ -29,15 +29,15 @@
         </div>
     </header>
     
-    <div class="input-section bg-slate-50 dark:bg-slate-700/50 p-6 rounded-lg mb-6 text-center">
+    <div class="input-section bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg mb-4 text-center">
       <label for="valorBruto" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"><strong>💵 Valor Bruto da Nota (R$):</strong></label>
       <input type="number" id="valorBruto" value="1000" placeholder="Digite o valor" step="0.01" class="w-full max-w-xs mx-auto p-3 text-center text-lg font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div id="subtotalTrio" class="p-4 rounded-lg text-white text-center font-semibold bg-gradient-to-r from-cyan-500 to-blue-500"></div>
-        <div id="retencaoTecnica" class="p-4 rounded-lg text-white text-center font-semibold bg-gradient-to-r from-amber-500 to-orange-500"></div>
-        <div id="resultado" class="p-4 rounded-lg text-white text-center font-semibold bg-gradient-to-r from-green-500 to-emerald-500"></div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div id="subtotalTrio" class="p-3 rounded-lg text-white text-center font-semibold bg-gradient-to-r from-cyan-500 to-blue-500 flex justify-between items-center text-sm"></div>
+        <div id="retencaoTecnica" class="p-3 rounded-lg text-white text-center font-semibold bg-gradient-to-r from-amber-500 to-orange-500 flex justify-between items-center text-sm"></div>
+        <div id="resultado" class="p-3 rounded-lg text-white text-center font-semibold bg-gradient-to-r from-green-500 to-emerald-500 flex justify-between items-center text-sm"></div>
     </div>
 
     <div class="table-container bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-x-auto">
@@ -62,7 +62,7 @@
     /**
      * @file Calculadora de Impostos - Versão Refatorada
      * @author HAlexandre
-     * @version 3.0.0
+     * @version 3.1.0
      */
 
     // --- Módulo de Configuração e Estado ---
