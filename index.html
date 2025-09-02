@@ -1,339 +1,419 @@
 <!DOCTYPE html>
 <html lang="pt-BR" class="">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Calculadora de Impostos - Nota Fiscal</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script>
-    tailwind.config = { darkMode: 'class' }
-  </script>
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Impostos - Nota Fiscal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .save-indicator {
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        .save-indicator.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
 </head>
 <body class="bg-slate-100 dark:bg-gray-900 text-slate-800 dark:text-slate-200 min-h-screen flex items-center justify-center p-4">
 
-  <div class="container bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-xl shadow-2xl w-full max-w-4xl relative">
-    <button id="themeToggle" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-transform hover:scale-110" aria-label="Alternar tema">🌙</button>
+    <div class="container bg-white dark:bg-slate-800 p-4 sm:p-6 rounded-xl shadow-2xl w-full max-w-4xl relative">
+        <button id="themeToggle" class="absolute top-4 right-4 w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-transform hover:scale-110" aria-label="Alternar tema">🌙</button>
 
-    <header class="mb-4 flex items-center justify-center gap-4">
-        <img src="https://raw.githubusercontent.com/Halexandre1/PDF_PRO/main/HERBERT.jpg" alt="Logótipo" class="w-12 h-12 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-800">
-        <div>
-            <h1 class="text-2xl font-bold text-slate-800 dark:text-white text-left">Calculadora de Impostos</h1>
-            <p class="text-slate-500 dark:text-slate-400 text-sm text-left">Análise de retenções em notas fiscais</p>
-        </div>
-    </header>
-    
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
-        <div class="input-section bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg text-center flex flex-col justify-center">
-          <label for="valorBruto" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"><strong>💵 Valor Bruto da Nota (R$):</strong></label>
-          <input type="number" id="valorBruto" value="1000" placeholder="Digite o valor" step="0.01" class="w-full max-w-xs mx-auto p-3 text-center text-lg font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
-        </div>
-        <div class="grid grid-cols-1 gap-2">
-            <div id="subtotalTrio" class="p-2 rounded-lg text-white text-center font-semibold bg-gradient-to-r from-cyan-500 to-blue-500"></div>
-            <div id="retencaoTecnica" class="p-2 rounded-lg text-white text-center font-semibold bg-gradient-to-r from-amber-500 to-orange-500"></div>
-            <div id="resultado" class="p-2 rounded-lg text-white text-center font-semibold bg-gradient-to-r from-green-500 to-emerald-500"></div>
-        </div>
-    </div>
-
-    <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
-        <label for="simplesNacionalToggle" class="flex items-center cursor-pointer">
-            <div class="relative">
-                <input type="checkbox" id="simplesNacionalToggle" class="sr-only peer">
-                <div class="w-14 h-8 bg-gray-200 rounded-full dark:bg-gray-700 peer-checked:bg-indigo-600 transition"></div>
-                <div class="absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform peer-checked:translate-x-full"></div>
+        <header class="mb-4 flex items-center justify-center gap-4 relative">
+            <img src="https://raw.githubusercontent.com/Halexandre1/PDF_PRO/main/HERBERT.jpg" alt="Logótipo" class="w-12 h-12 rounded-full object-cover border-2 border-indigo-200 dark:border-indigo-800">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800 dark:text-white text-left">Calculadora de Impostos</h1>
+                <p class="text-slate-500 dark:text-slate-400 text-sm text-left">Análise de retenções em notas fiscais</p>
             </div>
-            <div class="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300">
-                Empresa do Simples Nacional?
+            <div id="saveIndicator" class="save-indicator absolute -top-2 right-12 text-xs bg-green-500 text-white px-2 py-1 rounded-full">
+                <i class="fas fa-check-circle"></i> Salvo!
             </div>
-        </label>
-        <div class="flex items-center gap-2">
-             <button id="btnMarcarPadrao" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors">Marcar Padrão</button>
-             <button id="btnMarcarTecnica" class="bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors">Marcar/Desmarcar Ret. Técnica</button>
+        </header>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            <div class="input-section bg-slate-50 dark:bg-slate-700/50 p-4 rounded-lg text-center flex flex-col justify-center">
+                <label for="valorBruto" class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"><strong>💵 Valor Bruto da Nota (R$):</strong></label>
+                <input type="text" id="valorBruto" value="R$ 1.000,00" placeholder="Digite o valor" class="w-full max-w-xs mx-auto p-3 text-center text-lg font-semibold bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
+            </div>
+            <div class="grid grid-cols-1 gap-2">
+                <div id="subtotalTrio" class="p-2 rounded-lg text-white text-center font-semibold bg-gradient-to-r from-cyan-500 to-blue-500"></div>
+                <div id="retencaoTecnica" class="p-2 rounded-lg text-white text-center font-semibold bg-gradient-to-r from-amber-500 to-orange-500"></div>
+                <div id="resultado" class="p-2 rounded-lg text-white text-center font-semibold bg-gradient-to-r from-green-500 to-emerald-500"></div>
+            </div>
         </div>
+
+        <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4 p-4 bg-slate-50 dark:bg-slate-700/50 rounded-lg">
+            <label for="simplesNacionalToggle" class="flex items-center cursor-pointer">
+                <div class="relative">
+                    <input type="checkbox" id="simplesNacionalToggle" class="sr-only peer">
+                    <div class="w-14 h-8 bg-gray-200 rounded-full dark:bg-gray-700 peer-checked:bg-indigo-600 transition"></div>
+                    <div class="absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition transform peer-checked:translate-x-full"></div>
+                </div>
+                <div class="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300">
+                    Empresa do Simples Nacional?
+                </div>
+            </label>
+            <div class="flex items-center gap-2 flex-wrap justify-center">
+                 <button id="btnMarcarPadrao" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors">Marcar Padrão</button>
+                 <button id="btnMarcarTecnica" class="bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors">Marcar/Desmarcar Ret. Técnica</button>
+                 <button id="btnResetar" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors"><i class="fas fa-undo mr-1"></i> Resetar</button>
+            </div>
+        </div>
+
+        <div class="table-container bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-x-auto">
+            <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
+                <thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-50 dark:bg-slate-700">
+                    <tr>
+                        <th scope="col" class="px-6 py-3">📋 Imposto</th>
+                        <th scope="col" class="px-6 py-3">💰 Base (R$)</th>
+                        <th scope="col" class="px-6 py-3">📊 Alíquota (%)</th>
+                        <th scope="col" class="px-6 py-3">✋ Retém?</th>
+                        <th scope="col" class="px-6 py-3">💸 Valor (R$)</th>
+                    </tr>
+                </thead>
+                <tbody id="tabelaImpostos"></tbody>
+            </table>
+        </div>
+        
+        <footer id="signature" class="text-center mt-6 text-sm text-slate-500 dark:text-slate-400"></footer>
     </div>
 
-    <div class="table-container bg-white dark:bg-slate-800 rounded-lg shadow-md overflow-x-auto">
-      <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
-        <thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-50 dark:bg-slate-700">
-          <tr>
-            <th scope="col" class="px-6 py-3">📋 Imposto</th>
-            <th scope="col" class="px-6 py-3">💰 Base Reduzida (R$)</th>
-            <th scope="col" class="px-6 py-3">📊 Alíquota (%)</th>
-            <th scope="col" class="px-6 py-3">✋ Retém?</th>
-            <th scope="col" class="px-6 py-3">💸 Valor (R$)</th>
-          </tr>
-        </thead>
-        <tbody id="tabelaImpostos"></tbody>
-      </table>
-    </div>
-    
-    <footer id="signature" class="text-center mt-6 text-sm text-slate-500 dark:text-slate-400"></footer>
-  </div>
+    <script>
+        /**
+         * @file Calculadora de Impostos com Regras de Negócio
+         * @author HAlexandre
+         * @version 4.4.0
+         */
 
-  <script>
-    /**
-     * @file Calculadora de Impostos com Regras de Negócio
-     * @author HAlexandre
-     * @version 4.3.1
-     */
+        const AppState = {
+            isSimplesNacional: false,
+            retemStateBeforeSimples: {},
+            impostos: [],
+            getImpostosDefault() {
+                return [
+                    { nome: 'INSS', aliquota: 0, retem: '' },
+                    { nome: 'ISS', aliquota: 0, retem: '' },
+                    { nome: 'PIS', aliquota: 0.65, retem: 'x' },
+                    { nome: 'COFINS', aliquota: 3.00, retem: 'x' },
+                    { nome: 'CSLL', aliquota: 1.00, retem: 'x' },
+                    { nome: 'IR', aliquota: 1.50, retem: 'x', selectOptions: [1.00, 1.50] },
+                    { nome: 'RETENÇÃO TÉCNICA', aliquota: 0, retem: '', especial: true }
+                ];
+            },
+            
+            salvarConfiguracoes() {
+                const config = {
+                    isSimplesNacional: this.isSimplesNacional,
+                    impostos: this.impostos.map(imp => ({ nome: imp.nome, aliquota: imp.aliquota, retem: imp.retem }))
+                };
+                localStorage.setItem('configImpostosV2', JSON.stringify(config));
+                UI.showSaveIndicator();
+            },
 
-    // --- Módulo de Configuração e Estado ---
-    const AppState = {
-      isSimplesNacional: false,
-      retemStateBeforeSimples: {},
-      impostos: [
-        { nome: 'INSS', aliquota: 0, retem: '' },
-        { nome: 'ISS', aliquota: 0, retem: '' },
-        { nome: 'PIS', aliquota: 0.65, retem: 'x' },
-        { nome: 'COFINS', aliquota: 3.00, retem: 'x' },
-        { nome: 'CSLL', aliquota: 1.00, retem: 'x' },
-        { nome: 'IR', aliquota: 1.50, retem: 'x', selectOptions: [1.00, 1.50] },
-        { nome: 'RETENÇÃO TÉCNICA', aliquota: 0, retem: '', especial: true }
-      ],
-      
-      salvarConfiguracoes() {
-        const config = {
-            isSimplesNacional: this.isSimplesNacional,
-            impostos: this.impostos.map(imp => ({ nome: imp.nome, aliquota: imp.aliquota, retem: imp.retem }))
-        };
-        localStorage.setItem('configImpostosV2', JSON.stringify(config));
-      },
-
-      carregarConfiguracoes() {
-        const configSalva = JSON.parse(localStorage.getItem('configImpostosV2'));
-        if (configSalva) {
-          this.isSimplesNacional = configSalva.isSimplesNacional || false;
-          if(configSalva.impostos) {
-            this.impostos.forEach(imposto => {
-                const salvo = configSalva.impostos.find(s => s.nome === imposto.nome);
-                if (salvo) {
-                imposto.aliquota = salvo.aliquota;
-                imposto.retem = salvo.retem;
-                }
-            });
-          }
-        }
-      }
-    };
-
-    // --- Módulo de UI ---
-    const UI = {
-      dom: {
-        tabelaImpostos: document.getElementById('tabelaImpostos'),
-        valorBruto: document.getElementById('valorBruto'),
-        resultado: document.getElementById('resultado'),
-        subtotalTrio: document.getElementById('subtotalTrio'),
-        retencaoTecnica: document.getElementById('retencaoTecnica'),
-        themeToggle: document.getElementById('themeToggle'),
-        simplesNacionalToggle: document.getElementById('simplesNacionalToggle'),
-        btnMarcarPadrao: document.getElementById('btnMarcarPadrao'),
-        btnMarcarTecnica: document.getElementById('btnMarcarTecnica'),
-        body: document.body,
-        signature: document.getElementById('signature'),
-      },
-      
-      formatarMoeda(valor) {
-        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
-      },
-
-      criarTabela() {
-        this.dom.tabelaImpostos.innerHTML = '';
-        AppState.impostos.forEach((imposto, i) => {
-          const tr = document.createElement('tr');
-          tr.className = `bg-white dark:bg-slate-800 border-b dark:border-slate-700 ${imposto.especial ? 'bg-amber-50 dark:bg-amber-900/20' : ''}`;
-
-          let aliquotaInput;
-          if (imposto.selectOptions) {
-            const options = imposto.selectOptions.map(opt => 
-              `<option value="${opt}"${imposto.aliquota === opt ? ' selected' : ''}>${opt.toFixed(2).replace('.', ',')}%</option>`
-            ).join('');
-            aliquotaInput = `<select id="aliquota_${i}" data-index="${i}" class="w-24 p-2 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-center">${options}</select>`;
-          } else {
-            aliquotaInput = `<input type="number" id="aliquota_${i}" data-index="${i}" value="${imposto.aliquota.toFixed(2)}" placeholder="0,00" step="0.01" class="w-24 p-2 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-center" />`;
-          }
-
-          tr.innerHTML = `
-            <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">${imposto.nome}</td>
-            <td class="px-6 py-4"><input type="number" id="base_${i}" data-index="${i}" step="0.01" placeholder="Auto" class="w-28 p-2 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-center" /></td>
-            <td class="px-6 py-4">${aliquotaInput}</td>
-            <td class="px-6 py-4"><input type="checkbox" id="retem_${i}" data-index="${i}" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" ${imposto.retem === 'x' ? 'checked' : ''} /></td>
-            <td class="px-6 py-4 font-semibold" id="valor_${i}">-</td>
-          `;
-          this.dom.tabelaImpostos.appendChild(tr);
-        });
-      },
-
-      atualizarResultados(resultados) {
-        this.dom.resultado.innerHTML = `<span class="block text-xs opacity-80">🎯 Líquido:</span> <div class="text-lg font-bold">${this.formatarMoeda(resultados.valorLiquido)}</div>`;
-        this.dom.subtotalTrio.innerHTML = `<span class="block text-xs opacity-80">📈 PIS/COFINS/CSLL:</span> <div class="text-lg font-bold">${this.formatarMoeda(resultados.subtotalTrio)}</div>`;
-        this.dom.retencaoTecnica.innerHTML = `<span class="block text-xs opacity-80">🔧 Ret. Técnica:</span> <div class="text-lg font-bold">${this.formatarMoeda(resultados.retencaoTecnicaValor)}</div>`;
-
-        resultados.valoresImpostos.forEach((item, i) => {
-          const el = document.getElementById(`valor_${i}`);
-          if (el) {
-            if (item.dispensado) {
-                el.innerHTML = `<span class="text-xs text-yellow-600 dark:text-yellow-400" title="${item.motivoDispensa}">Dispensado</span>`;
-            } else {
-                el.innerText = item.valor > 0 ? this.formatarMoeda(item.valor) : '-';
-            }
-          }
-        });
-      },
-
-      loadTheme() {
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.classList.add('dark');
-          this.dom.themeToggle.textContent = '☀️';
-        } else {
-          this.dom.themeToggle.textContent = '🌙';
-        }
-      },
-
-      setSignature() {
-        this.dom.signature.innerHTML = `<p>Feito por HAlexandre © ${new Date().getFullYear()}</p>`;
-      }
-    };
-
-    // --- Módulo de Cálculo ---
-    const Calculadora = {
-      calcular() {
-        const valorBruto = parseFloat(UI.dom.valorBruto.value) || 0;
-        
-        let valoresCalculados = {};
-        
-        AppState.impostos.forEach((imposto, i) => {
-          const base = parseFloat(document.getElementById(`base_${i}`).value) || valorBruto;
-          const retemCheckbox = document.getElementById(`retem_${i}`);
-          const retem = retemCheckbox.checked;
-          const aliquota = parseFloat(document.getElementById(`aliquota_${i}`).value) || 0;
-          
-          imposto.aliquota = aliquota;
-          imposto.retem = retem ? 'x' : '';
-
-          valoresCalculados[imposto.nome] = retem ? (base * aliquota) / 100 : 0;
-        });
-
-        const csrfSum = valoresCalculados.PIS + valoresCalculados.COFINS + valoresCalculados.CSLL;
-        const valoresFinais = [];
-        let totalRetido = 0;
-        let subtotalTrio = 0;
-        let retencaoTecnicaValor = 0;
-
-        AppState.impostos.forEach(imposto => {
-            let valorFinal = valoresCalculados[imposto.nome];
-            let dispensado = false;
-            let motivoDispensa = '';
-
-            if (imposto.nome === 'IR' && valorFinal > 0 && valorFinal < 10) {
-                valorFinal = 0;
-                dispensado = true;
-                motivoDispensa = 'Valor do IRRF inferior a R$ 10,00';
-            }
-            if (['PIS', 'COFINS', 'CSLL'].includes(imposto.nome) && csrfSum > 0 && csrfSum < 10) {
-                valorFinal = 0;
-                dispensado = true;
-                motivoDispensa = 'Soma de PIS/COFINS/CSLL inferior a R$ 10,00';
-            }
-
-            valoresFinais.push({ valor: valorFinal, dispensado, motivoDispensa });
-
-            totalRetido += valorFinal;
-            if (['PIS', 'COFINS', 'CSLL'].includes(imposto.nome)) {
-                subtotalTrio += valorFinal;
-            }
-            if (imposto.especial) {
-                retencaoTecnicaValor += valorFinal;
-            }
-        });
-        
-        const valorLiquido = valorBruto - totalRetido;
-        
-        UI.atualizarResultados({
-          valorLiquido,
-          subtotalTrio,
-          retencaoTecnicaValor,
-          valoresImpostos: valoresFinais
-        });
-
-        AppState.salvarConfiguracoes();
-      }
-    };
-
-    // --- Módulo de Eventos ---
-    const Eventos = {
-      setup() {
-        UI.dom.tabelaImpostos.addEventListener('input', (e) => {
-          if (e.target.matches('input, select')) {
-            Calculadora.calcular();
-          }
-        });
-        UI.dom.valorBruto.addEventListener('input', Calculadora.calcular);
-        
-        UI.dom.simplesNacionalToggle.addEventListener('change', () => {
-            AppState.isSimplesNacional = UI.dom.simplesNacionalToggle.checked;
-            AppState.impostos.forEach((imposto, i) => {
-                if (['PIS', 'COFINS', 'CSLL'].includes(imposto.nome)) {
-                    const retemCheckbox = document.getElementById(`retem_${i}`);
-                    if (AppState.isSimplesNacional) {
-                        AppState.retemStateBeforeSimples[imposto.nome] = retemCheckbox.checked;
-                        retemCheckbox.checked = false;
-                    } else {
-                        retemCheckbox.checked = AppState.retemStateBeforeSimples[imposto.nome] ?? true;
+            carregarConfiguracoes() {
+                this.impostos = this.getImpostosDefault();
+                const configSalva = JSON.parse(localStorage.getItem('configImpostosV2'));
+                if (configSalva) {
+                    this.isSimplesNacional = configSalva.isSimplesNacional || false;
+                    if(configSalva.impostos) {
+                        this.impostos.forEach(imposto => {
+                            const salvo = configSalva.impostos.find(s => s.nome === imposto.nome);
+                            if (salvo) {
+                                imposto.aliquota = salvo.aliquota;
+                                imposto.retem = salvo.retem;
+                            }
+                        });
                     }
                 }
-            });
-            Calculadora.calcular();
-        });
+            },
 
-        UI.dom.btnMarcarPadrao.addEventListener('click', () => {
-            const isSimples = UI.dom.simplesNacionalToggle.checked;
-            AppState.impostos.forEach((imposto, i) => {
-                if (!imposto.especial) {
-                    const retemCheckbox = document.getElementById(`retem_${i}`);
-                    const isFederalCSRF = ['PIS', 'COFINS', 'CSLL'].includes(imposto.nome);
-                    retemCheckbox.checked = !(isSimples && isFederalCSRF);
+            resetarConfiguracoes() {
+                this.impostos = this.getImpostosDefault();
+                this.isSimplesNacional = false;
+                localStorage.removeItem('configImpostosV2');
+            }
+        };
+
+        const UI = {
+            dom: {
+                tabelaImpostos: document.getElementById('tabelaImpostos'),
+                valorBruto: document.getElementById('valorBruto'),
+                resultado: document.getElementById('resultado'),
+                subtotalTrio: document.getElementById('subtotalTrio'),
+                retencaoTecnica: document.getElementById('retencaoTecnica'),
+                themeToggle: document.getElementById('themeToggle'),
+                simplesNacionalToggle: document.getElementById('simplesNacionalToggle'),
+                btnMarcarPadrao: document.getElementById('btnMarcarPadrao'),
+                btnMarcarTecnica: document.getElementById('btnMarcarTecnica'),
+                btnResetar: document.getElementById('btnResetar'),
+                body: document.body,
+                signature: document.getElementById('signature'),
+                saveIndicator: document.getElementById('saveIndicator')
+            },
+            saveIndicatorTimeout: null,
+            
+            formatarMoeda(valor) {
+                return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
+            },
+            
+            parseCurrency(value) {
+                if (typeof value !== 'string') value = String(value);
+                return parseFloat(value.replace(/[^0-9,-]+/g, "").replace(",", ".")) || 0;
+            },
+
+            criarTabela() {
+                this.dom.tabelaImpostos.innerHTML = '';
+                AppState.impostos.forEach((imposto, i) => {
+                    const tr = document.createElement('tr');
+                    tr.className = `bg-white dark:bg-slate-800 border-b dark:border-slate-700 ${imposto.especial ? 'bg-amber-50 dark:bg-amber-900/20' : ''}`;
+
+                    let aliquotaInput;
+                    if (imposto.selectOptions) {
+                        const options = imposto.selectOptions.map(opt => 
+                            `<option value="${opt}"${imposto.aliquota === opt ? ' selected' : ''}>${opt.toFixed(2).replace('.', ',')}%</option>`
+                        ).join('');
+                        aliquotaInput = `<select id="aliquota_${i}" data-index="${i}" class="w-24 p-2 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-center" aria-label="Alíquota de ${imposto.nome}">${options}</select>`;
+                    } else {
+                        aliquotaInput = `<input type="number" id="aliquota_${i}" data-index="${i}" value="${imposto.aliquota.toFixed(2)}" placeholder="0,00" step="0.01" class="w-24 p-2 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-center" aria-label="Alíquota de ${imposto.nome}" />`;
+                    }
+
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">${imposto.nome}</td>
+                        <td class="px-6 py-4"><input type="text" id="base_${i}" data-index="${i}" placeholder="Auto" class="w-28 p-2 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-center" aria-label="Base de cálculo de ${imposto.nome}" /></td>
+                        <td class="px-6 py-4">${aliquotaInput}</td>
+                        <td class="px-6 py-4"><input type="checkbox" id="retem_${i}" data-index="${i}" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" ${imposto.retem === 'x' ? 'checked' : ''} aria-label="Reter ${imposto.nome}?" /></td>
+                        <td class="px-6 py-4 font-semibold" id="valor_${i}">-</td>
+                    `;
+                    this.dom.tabelaImpostos.appendChild(tr);
+                });
+            },
+
+            atualizarResultados(resultados) {
+                this.dom.resultado.innerHTML = `<span class="block text-xs opacity-80">🎯 Líquido:</span> <div class="text-lg font-bold">${this.formatarMoeda(resultados.valorLiquido)}</div>`;
+                this.dom.subtotalTrio.innerHTML = `<span class="block text-xs opacity-80">📈 PIS/COFINS/CSLL:</span> <div class="text-lg font-bold">${this.formatarMoeda(resultados.subtotalTrio)}</div>`;
+                this.dom.retencaoTecnica.innerHTML = `<span class="block text-xs opacity-80">🔧 Ret. Técnica:</span> <div class="text-lg font-bold">${this.formatarMoeda(resultados.retencaoTecnicaValor)}</div>`;
+
+                resultados.valoresImpostos.forEach((item, i) => {
+                    const el = document.getElementById(`valor_${i}`);
+                    if (el) {
+                        if (item.dispensado) {
+                            el.innerHTML = `<span class="text-xs text-yellow-600 dark:text-yellow-400" title="${item.motivoDispensa}">Dispensado</span>`;
+                        } else {
+                            el.innerText = item.valor > 0 ? this.formatarMoeda(item.valor) : '-';
+                        }
+                    }
+                });
+            },
+            
+            showSaveIndicator() {
+                clearTimeout(this.saveIndicatorTimeout);
+                this.dom.saveIndicator.classList.add('show');
+                this.saveIndicatorTimeout = setTimeout(() => {
+                    this.dom.saveIndicator.classList.remove('show');
+                }, 1500);
+            },
+
+            loadTheme() {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                    this.dom.themeToggle.textContent = '☀️';
+                } else {
+                    this.dom.themeToggle.textContent = '🌙';
                 }
-            });
-            Calculadora.calcular();
-        });
+            },
 
-        UI.dom.btnMarcarTecnica.addEventListener('click', () => {
-            AppState.impostos.forEach((imposto, i) => {
-                if (imposto.especial) {
+            setSignature() {
+                this.dom.signature.innerHTML = `<p>Feito por HAlexandre © ${new Date().getFullYear()}</p>`;
+            }
+        };
+
+        const Calculadora = {
+            calcular() {
+                const valorBruto = UI.parseCurrency(UI.dom.valorBruto.value);
+                
+                let valoresCalculados = {};
+                
+                AppState.impostos.forEach((imposto, i) => {
+                    const baseInput = document.getElementById(`base_${i}`);
+                    const base = UI.parseCurrency(baseInput.value) || valorBruto;
+                    const retem = imposto.retem === 'x'; // CORREÇÃO: Lê o estado diretamente da AppState
+                    const aliquotaInput = document.getElementById(`aliquota_${i}`);
+                    const aliquota = parseFloat(aliquotaInput.value) || 0;
+                    
+                    imposto.aliquota = aliquota;
+                    // O estado de 'retem' já foi atualizado pelos event handlers
+
+                    valoresCalculados[imposto.nome] = retem ? (base * aliquota) / 100 : 0;
+                });
+
+                const csrfSum = valoresCalculados.PIS + valoresCalculados.COFINS + valoresCalculados.CSLL;
+                const valoresFinais = [];
+                let totalRetido = 0;
+                let subtotalTrio = 0;
+                let retencaoTecnicaValor = 0;
+
+                AppState.impostos.forEach(imposto => {
+                    let valorFinal = valoresCalculados[imposto.nome];
+                    let dispensado = false;
+                    let motivoDispensa = '';
+
+                    if (imposto.nome === 'IR' && valorFinal > 0 && valorFinal < 10) {
+                        valorFinal = 0;
+                        dispensado = true;
+                        motivoDispensa = 'Valor do IRRF inferior a R$ 10,00';
+                    }
+                    if (['PIS', 'COFINS', 'CSLL'].includes(imposto.nome) && csrfSum > 0 && csrfSum < 10) {
+                        valorFinal = 0;
+                        dispensado = true;
+                        motivoDispensa = 'Soma de PIS/COFINS/CSLL inferior a R$ 10,00';
+                    }
+
+                    valoresFinais.push({ valor: valorFinal, dispensado, motivoDispensa });
+
+                    totalRetido += valorFinal;
+                    if (['PIS', 'COFINS', 'CSLL'].includes(imposto.nome)) {
+                        subtotalTrio += valorFinal;
+                    }
+                    if (imposto.especial) {
+                        retencaoTecnicaValor += valorFinal;
+                    }
+                });
+                
+                const valorLiquido = valorBruto - totalRetido;
+                
+                UI.atualizarResultados({
+                    valorLiquido,
+                    subtotalTrio,
+                    retencaoTecnicaValor,
+                    valoresImpostos: valoresFinais
+                });
+
+                AppState.salvarConfiguracoes();
+            }
+        };
+
+        // --- Módulo de Eventos ---
+        const Eventos = {
+            /** Sincroniza a UI com o estado atual e recalcula os valores */
+            syncUIAndCalculate() {
+                AppState.impostos.forEach((imposto, i) => {
                     const retemCheckbox = document.getElementById(`retem_${i}`);
-                    retemCheckbox.checked = !retemCheckbox.checked;
-                }
-            });
+                    if (retemCheckbox) {
+                        retemCheckbox.checked = imposto.retem === 'x';
+                    }
+                });
+                Calculadora.calcular();
+            },
+
+            setup() {
+                UI.dom.tabelaImpostos.addEventListener('input', (e) => {
+                    if (e.target.matches('input, select')) {
+                        Calculadora.calcular();
+                    }
+                });
+                
+                UI.dom.valorBruto.addEventListener('input', () => {
+                    const valorNumerico = UI.parseCurrency(UI.dom.valorBruto.value);
+                    Calculadora.calcular();
+                });
+
+                UI.dom.valorBruto.addEventListener('blur', () => {
+                    const valorNumerico = UI.parseCurrency(UI.dom.valorBruto.value);
+                    UI.dom.valorBruto.value = UI.formatarMoeda(valorNumerico);
+                });
+
+                UI.dom.tabelaImpostos.addEventListener('blur', (e) => {
+                    if (e.target.id.startsWith('base_')) {
+                        const valorNumerico = UI.parseCurrency(e.target.value);
+                        if (valorNumerico > 0) {
+                           e.target.value = UI.formatarMoeda(valorNumerico);
+                        } else {
+                           e.target.value = ''; // Limpa se for zero para mostrar o placeholder "Auto"
+                        }
+                    }
+                }, true); // Use capturing para garantir que o evento de blur seja capturado
+
+                UI.dom.simplesNacionalToggle.addEventListener('change', (e) => {
+                    AppState.isSimplesNacional = e.target.checked;
+                    AppState.impostos.forEach((imposto) => {
+                        // MELHORIA: A regra do simples agora também se aplica ao IR
+                        if (['PIS', 'COFINS', 'CSLL', 'IR'].includes(imposto.nome)) {
+                            if (AppState.isSimplesNacional) {
+                                AppState.retemStateBeforeSimples[imposto.nome] = imposto.retem;
+                                imposto.retem = '';
+                            } else {
+                                imposto.retem = AppState.retemStateBeforeSimples[imposto.nome] ?? 'x';
+                            }
+                        }
+                    });
+                    this.syncUIAndCalculate();
+                });
+
+                UI.dom.btnMarcarPadrao.addEventListener('click', () => {
+                    const isSimples = AppState.isSimplesNacional;
+                    AppState.impostos.forEach((imposto) => {
+                        if (!imposto.especial) {
+                            const isFederal = ['PIS', 'COFINS', 'CSLL', 'IR'].includes(imposto.nome);
+                            imposto.retem = !(isSimples && isFederal) ? 'x' : '';
+                        }
+                    });
+                    this.syncUIAndCalculate();
+                });
+
+                UI.dom.btnMarcarTecnica.addEventListener('click', () => {
+                    AppState.impostos.forEach((imposto) => {
+                        if (imposto.especial) {
+                            imposto.retem = imposto.retem === 'x' ? '' : 'x'; // Toggle state
+                        }
+                    });
+                    this.syncUIAndCalculate();
+                });
+                
+                UI.dom.btnResetar.addEventListener('click', () => {
+                    // CORREÇÃO: Removido o confirm() que pode falhar em alguns ambientes
+                    AppState.resetarConfiguracoes();
+                    UI.dom.simplesNacionalToggle.checked = false;
+                    UI.criarTabela();
+                    this.syncUIAndCalculate();
+                });
+                
+                UI.dom.themeToggle.addEventListener('click', () => {
+                    document.documentElement.classList.toggle('dark');
+                    const isDark = document.documentElement.classList.contains('dark');
+                    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                    UI.dom.themeToggle.textContent = isDark ? '☀️' : '🌙';
+                });
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            AppState.carregarConfiguracoes();
+            UI.dom.simplesNacionalToggle.checked = AppState.isSimplesNacional;
+            UI.criarTabela();
+            UI.loadTheme();
+            UI.setSignature();
+            Eventos.setup();
+            
+            // Força a formatação inicial do valor
+            const valorInicial = UI.parseCurrency(UI.dom.valorBruto.value);
+            UI.dom.valorBruto.value = UI.formatarMoeda(valorInicial);
+            
             Calculadora.calcular();
         });
-        
-        UI.dom.themeToggle.addEventListener('click', () => {
-          document.documentElement.classList.toggle('dark');
-          const isDark = document.documentElement.classList.contains('dark');
-          localStorage.setItem('theme', isDark ? 'dark' : 'light');
-          UI.dom.themeToggle.textContent = isDark ? '☀️' : '🌙';
-        });
-      }
-    };
 
-    // --- Inicialização da Aplicação ---
-    document.addEventListener('DOMContentLoaded', () => {
-      AppState.carregarConfiguracoes();
-      UI.dom.simplesNacionalToggle.checked = AppState.isSimplesNacional;
-      UI.criarTabela();
-      UI.loadTheme();
-      UI.setSignature();
-      Eventos.setup();
-      Calculadora.calcular();
-    });
-
-  </script>
+    </script>
 </body>
 </html>
+
