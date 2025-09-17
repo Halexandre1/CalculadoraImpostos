@@ -102,7 +102,7 @@
         /**
          * @file Calculadora de Impostos - Versão Final e Robusta
          * @author HAlexandre
-         * @version 4.6.0
+         * @version 4.7.1
          */
 
         const AppState = {
@@ -110,8 +110,8 @@
             impostos: [],
             getImpostosDefault() {
                 return [
-                    { nome: 'INSS', aliquota: 0, retem: false, isDefault: false },
-                    { nome: 'ISS', aliquota: 0, retem: false, isDefault: false },
+                    { nome: 'INSS', aliquota: 0, retem: false, isDefault: true },
+                    { nome: 'ISS', aliquota: 0, retem: false, isDefault: true },
                     { nome: 'PIS', aliquota: 0.65, retem: true, isDefault: true },
                     { nome: 'COFINS', aliquota: 3.00, retem: true, isDefault: true },
                     { nome: 'CSLL', aliquota: 1.00, retem: true, isDefault: true },
@@ -262,8 +262,6 @@
                 AppState.impostos.forEach((imposto, i) => {
                     const baseInput = document.getElementById(`base_${i}`);
                     const base = UI.parseCurrency(baseInput.value) || valorBruto;
-                    imposto.aliquota = parseFloat(document.getElementById(`aliquota_${i}`).value) || 0;
-                    imposto.retem = document.getElementById(`retem_${i}`).checked;
                     valoresCalculados[imposto.nome] = imposto.retem ? (base * imposto.aliquota) / 100 : 0;
                 });
 
@@ -308,25 +306,33 @@
             },
 
             setup() {
-                UI.dom.tabelaImpostos.addEventListener('input', Calculadora.calcular);
-                UI.dom.valorBruto.addEventListener('input', Calculadora.calcular);
-
-                UI.dom.valorBruto.addEventListener('blur', (e) => {
-                    const valorNumerico = UI.parseCurrency(e.target.value);
-                    e.target.value = UI.formatarMoeda(valorNumerico);
+                UI.dom.tabelaImpostos.addEventListener('input', (e) => {
+                    const index = parseInt(e.target.dataset.index, 10);
+                    if (!isNaN(index)) {
+                        const imposto = AppState.impostos[index];
+                        if (e.target.type === 'checkbox') {
+                            imposto.retem = e.target.checked;
+                        } else if (e.target.id.startsWith('aliquota_')) {
+                            imposto.aliquota = parseFloat(e.target.value) || 0;
+                        }
+                    }
+                    Calculadora.calcular();
                 });
 
+                UI.dom.valorBruto.addEventListener('input', Calculadora.calcular);
+                UI.dom.valorBruto.addEventListener('blur', (e) => UI.dom.valorBruto.value = UI.formatarMoeda(UI.parseCurrency(e.target.value)));
                 UI.dom.tabelaImpostos.addEventListener('blur', (e) => {
                     if (e.target.id.startsWith('base_')) {
-                        const valorNumerico = UI.parseCurrency(e.target.value);
-                        e.target.value = valorNumerico > 0 ? UI.formatarMoeda(valorNumerico) : '';
+                        const valor = UI.parseCurrency(e.target.value);
+                        e.target.value = valor > 0 ? UI.formatarMoeda(valor) : '';
                     }
                 }, true);
 
                 UI.dom.simplesNacionalToggle.addEventListener('change', (e) => {
                     AppState.isSimplesNacional = e.target.checked;
-                    AppState.impostos.forEach((imposto) => {
-                        if (imposto.isDefault) { // Apenas impostos padrão são afetados
+                    const federalTaxes = ['PIS', 'COFINS', 'CSLL', 'IR'];
+                    AppState.impostos.forEach(imposto => {
+                        if (federalTaxes.includes(imposto.nome)) {
                              imposto.retem = !AppState.isSimplesNacional;
                         }
                     });
@@ -335,21 +341,20 @@
 
                 UI.dom.btnMarcarPadrao.addEventListener('click', () => {
                     const isSimples = AppState.isSimplesNacional;
-                    // Verifica se todos os impostos padrão (não simples) já estão marcados
-                    const allMarked = AppState.impostos.every(imp => !imp.isDefault || imp.retem);
+                    const defaultTaxes = AppState.impostos.filter(imp => imp.isDefault);
+                    const allMarked = defaultTaxes.every(imp => imp.retem);
                     
-                    AppState.impostos.forEach((imposto) => {
+                    AppState.impostos.forEach(imposto => {
                         if (imposto.isDefault) {
                             const isFederal = ['PIS', 'COFINS', 'CSLL', 'IR'].includes(imposto.nome);
-                            // Se todos estiverem marcados, desmarca. Senão, marca.
-                            imposto.retem = allMarked ? false : !(isSimples && isFederal);
+                            imposto.retem = isSimples && isFederal ? false : !allMarked;
                         }
                     });
                     this.syncUIAndCalculate();
                 });
 
                 UI.dom.btnMarcarTecnica.addEventListener('click', () => {
-                    AppState.impostos.forEach((imposto) => {
+                    AppState.impostos.forEach(imposto => {
                         if (imposto.especial) imposto.retem = !imposto.retem;
                     });
                     this.syncUIAndCalculate();
@@ -379,9 +384,7 @@
             UI.setSignature();
             Eventos.setup();
             
-            const valorInicial = UI.parseCurrency(UI.dom.valorBruto.value);
-            UI.dom.valorBruto.value = UI.formatarMoeda(valorInicial);
-            
+            UI.dom.valorBruto.value = UI.formatarMoeda(UI.parseCurrency(UI.dom.valorBruto.value));
             Calculadora.calcular();
         });
     </script>
