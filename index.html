@@ -23,6 +23,15 @@
             opacity: 1;
             transform: translateY(0);
         }
+        tr.disabled-row {
+            opacity: 0.6;
+        }
+        tr.disabled-row input, tr.disabled-row select {
+            background-color: #f1f5f9;
+        }
+        .dark tr.disabled-row input, .dark tr.disabled-row select {
+            background-color: #334155;
+        }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-gray-900 text-slate-800 dark:text-slate-200 min-h-screen flex items-center justify-center p-4">
@@ -65,7 +74,7 @@
                 </div>
             </label>
             <div class="flex items-center gap-2 flex-wrap justify-center">
-                 <button id="btnMarcarPadrao" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors">Marcar Padrão</button>
+                 <button id="btnMarcarPadrao" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors">Marcar/Desmarcar Padrão</button>
                  <button id="btnMarcarTecnica" class="bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors">Marcar/Desmarcar Ret. Técnica</button>
                  <button id="btnResetar" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors"><i class="fas fa-undo mr-1"></i> Resetar</button>
             </div>
@@ -91,24 +100,23 @@
 
     <script>
         /**
-         * @file Calculadora de Impostos com Regras de Negócio
+         * @file Calculadora de Impostos - Versão Final e Robusta
          * @author HAlexandre
-         * @version 4.4.0
+         * @version 4.6.0
          */
 
         const AppState = {
             isSimplesNacional: false,
-            retemStateBeforeSimples: {},
             impostos: [],
             getImpostosDefault() {
                 return [
-                    { nome: 'INSS', aliquota: 0, retem: '' },
-                    { nome: 'ISS', aliquota: 0, retem: '' },
-                    { nome: 'PIS', aliquota: 0.65, retem: 'x' },
-                    { nome: 'COFINS', aliquota: 3.00, retem: 'x' },
-                    { nome: 'CSLL', aliquota: 1.00, retem: 'x' },
-                    { nome: 'IR', aliquota: 1.50, retem: 'x', selectOptions: [1.00, 1.50] },
-                    { nome: 'RETENÇÃO TÉCNICA', aliquota: 0, retem: '', especial: true }
+                    { nome: 'INSS', aliquota: 0, retem: false, isDefault: false },
+                    { nome: 'ISS', aliquota: 0, retem: false, isDefault: false },
+                    { nome: 'PIS', aliquota: 0.65, retem: true, isDefault: true },
+                    { nome: 'COFINS', aliquota: 3.00, retem: true, isDefault: true },
+                    { nome: 'CSLL', aliquota: 1.00, retem: true, isDefault: true },
+                    { nome: 'IR', aliquota: 1.50, retem: true, isDefault: true, selectOptions: [1.00, 1.50] },
+                    { nome: 'RETENÇÃO TÉCNICA', aliquota: 0, retem: false, especial: true, isDefault: false }
                 ];
             },
             
@@ -123,18 +131,23 @@
 
             carregarConfiguracoes() {
                 this.impostos = this.getImpostosDefault();
-                const configSalva = JSON.parse(localStorage.getItem('configImpostosV2'));
-                if (configSalva) {
-                    this.isSimplesNacional = configSalva.isSimplesNacional || false;
-                    if(configSalva.impostos) {
-                        this.impostos.forEach(imposto => {
-                            const salvo = configSalva.impostos.find(s => s.nome === imposto.nome);
-                            if (salvo) {
-                                imposto.aliquota = salvo.aliquota;
-                                imposto.retem = salvo.retem;
-                            }
-                        });
+                try {
+                    const configSalva = JSON.parse(localStorage.getItem('configImpostosV2'));
+                    if (configSalva) {
+                        this.isSimplesNacional = configSalva.isSimplesNacional || false;
+                        if(configSalva.impostos) {
+                            this.impostos.forEach(imposto => {
+                                const salvo = configSalva.impostos.find(s => s.nome === imposto.nome);
+                                if (salvo) {
+                                    imposto.aliquota = salvo.aliquota;
+                                    imposto.retem = salvo.retem;
+                                }
+                            });
+                        }
                     }
+                } catch(e) {
+                    console.error("Erro ao carregar configurações, resetando para o padrão.", e);
+                    this.resetarConfiguracoes();
                 }
             },
 
@@ -157,7 +170,6 @@
                 btnMarcarPadrao: document.getElementById('btnMarcarPadrao'),
                 btnMarcarTecnica: document.getElementById('btnMarcarTecnica'),
                 btnResetar: document.getElementById('btnResetar'),
-                body: document.body,
                 signature: document.getElementById('signature'),
                 saveIndicator: document.getElementById('saveIndicator')
             },
@@ -176,7 +188,8 @@
                 this.dom.tabelaImpostos.innerHTML = '';
                 AppState.impostos.forEach((imposto, i) => {
                     const tr = document.createElement('tr');
-                    tr.className = `bg-white dark:bg-slate-800 border-b dark:border-slate-700 ${imposto.especial ? 'bg-amber-50 dark:bg-amber-900/20' : ''}`;
+                    tr.className = `border-b dark:border-slate-700 transition-opacity ${imposto.especial ? 'bg-amber-50 dark:bg-amber-900/20' : 'bg-white dark:bg-slate-800'}`;
+                    tr.id = `row_${i}`;
 
                     let aliquotaInput;
                     if (imposto.selectOptions) {
@@ -192,7 +205,7 @@
                         <td class="px-6 py-4 font-medium text-gray-900 dark:text-white">${imposto.nome}</td>
                         <td class="px-6 py-4"><input type="text" id="base_${i}" data-index="${i}" placeholder="Auto" class="w-28 p-2 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-center" aria-label="Base de cálculo de ${imposto.nome}" /></td>
                         <td class="px-6 py-4">${aliquotaInput}</td>
-                        <td class="px-6 py-4"><input type="checkbox" id="retem_${i}" data-index="${i}" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" ${imposto.retem === 'x' ? 'checked' : ''} aria-label="Reter ${imposto.nome}?" /></td>
+                        <td class="px-6 py-4"><input type="checkbox" id="retem_${i}" data-index="${i}" class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" ${imposto.retem ? 'checked' : ''} aria-label="Reter ${imposto.nome}?" /></td>
                         <td class="px-6 py-4 font-semibold" id="valor_${i}">-</td>
                     `;
                     this.dom.tabelaImpostos.appendChild(tr);
@@ -205,12 +218,14 @@
                 this.dom.retencaoTecnica.innerHTML = `<span class="block text-xs opacity-80">🔧 Ret. Técnica:</span> <div class="text-lg font-bold">${this.formatarMoeda(resultados.retencaoTecnicaValor)}</div>`;
 
                 resultados.valoresImpostos.forEach((item, i) => {
-                    const el = document.getElementById(`valor_${i}`);
-                    if (el) {
+                    const elValor = document.getElementById(`valor_${i}`);
+                    const elRow = document.getElementById(`row_${i}`);
+                    if (elValor && elRow) {
+                         elRow.classList.toggle('disabled-row', !AppState.impostos[i].retem);
                         if (item.dispensado) {
-                            el.innerHTML = `<span class="text-xs text-yellow-600 dark:text-yellow-400" title="${item.motivoDispensa}">Dispensado</span>`;
+                            elValor.innerHTML = `<span class="text-xs text-yellow-600 dark:text-yellow-400" title="${item.motivoDispensa}">Dispensado</span>`;
                         } else {
-                            el.innerText = item.valor > 0 ? this.formatarMoeda(item.valor) : '-';
+                            elValor.innerText = item.valor > 0 ? this.formatarMoeda(item.valor) : '-';
                         }
                     }
                 });
@@ -242,20 +257,14 @@
         const Calculadora = {
             calcular() {
                 const valorBruto = UI.parseCurrency(UI.dom.valorBruto.value);
-                
                 let valoresCalculados = {};
                 
                 AppState.impostos.forEach((imposto, i) => {
                     const baseInput = document.getElementById(`base_${i}`);
                     const base = UI.parseCurrency(baseInput.value) || valorBruto;
-                    const retem = imposto.retem === 'x'; // CORREÇÃO: Lê o estado diretamente da AppState
-                    const aliquotaInput = document.getElementById(`aliquota_${i}`);
-                    const aliquota = parseFloat(aliquotaInput.value) || 0;
-                    
-                    imposto.aliquota = aliquota;
-                    // O estado de 'retem' já foi atualizado pelos event handlers
-
-                    valoresCalculados[imposto.nome] = retem ? (base * aliquota) / 100 : 0;
+                    imposto.aliquota = parseFloat(document.getElementById(`aliquota_${i}`).value) || 0;
+                    imposto.retem = document.getElementById(`retem_${i}`).checked;
+                    valoresCalculados[imposto.nome] = imposto.retem ? (base * imposto.aliquota) / 100 : 0;
                 });
 
                 const csrfSum = valoresCalculados.PIS + valoresCalculados.COFINS + valoresCalculados.CSLL;
@@ -270,92 +279,55 @@
                     let motivoDispensa = '';
 
                     if (imposto.nome === 'IR' && valorFinal > 0 && valorFinal < 10) {
-                        valorFinal = 0;
-                        dispensado = true;
-                        motivoDispensa = 'Valor do IRRF inferior a R$ 10,00';
+                        valorFinal = 0; dispensado = true; motivoDispensa = 'Valor do IRRF inferior a R$ 10,00';
                     }
                     if (['PIS', 'COFINS', 'CSLL'].includes(imposto.nome) && csrfSum > 0 && csrfSum < 10) {
-                        valorFinal = 0;
-                        dispensado = true;
-                        motivoDispensa = 'Soma de PIS/COFINS/CSLL inferior a R$ 10,00';
+                        valorFinal = 0; dispensado = true; motivoDispensa = 'Soma de PIS/COFINS/CSLL inferior a R$ 10,00';
                     }
 
                     valoresFinais.push({ valor: valorFinal, dispensado, motivoDispensa });
-
-                    totalRetido += valorFinal;
-                    if (['PIS', 'COFINS', 'CSLL'].includes(imposto.nome)) {
-                        subtotalTrio += valorFinal;
-                    }
-                    if (imposto.especial) {
-                        retencaoTecnicaValor += valorFinal;
-                    }
+                    if(imposto.retem) totalRetido += valorFinal;
+                    if (['PIS', 'COFINS', 'CSLL'].includes(imposto.nome) && imposto.retem) subtotalTrio += valorFinal;
+                    if (imposto.especial && imposto.retem) retencaoTecnicaValor += valorFinal;
                 });
                 
                 const valorLiquido = valorBruto - totalRetido;
                 
-                UI.atualizarResultados({
-                    valorLiquido,
-                    subtotalTrio,
-                    retencaoTecnicaValor,
-                    valoresImpostos: valoresFinais
-                });
-
+                UI.atualizarResultados({ valorLiquido, subtotalTrio, retencaoTecnicaValor, valoresImpostos: valoresFinais });
                 AppState.salvarConfiguracoes();
             }
         };
 
-        // --- Módulo de Eventos ---
         const Eventos = {
-            /** Sincroniza a UI com o estado atual e recalcula os valores */
             syncUIAndCalculate() {
                 AppState.impostos.forEach((imposto, i) => {
                     const retemCheckbox = document.getElementById(`retem_${i}`);
-                    if (retemCheckbox) {
-                        retemCheckbox.checked = imposto.retem === 'x';
-                    }
+                    if (retemCheckbox) retemCheckbox.checked = imposto.retem;
                 });
                 Calculadora.calcular();
             },
 
             setup() {
-                UI.dom.tabelaImpostos.addEventListener('input', (e) => {
-                    if (e.target.matches('input, select')) {
-                        Calculadora.calcular();
-                    }
-                });
-                
-                UI.dom.valorBruto.addEventListener('input', () => {
-                    const valorNumerico = UI.parseCurrency(UI.dom.valorBruto.value);
-                    Calculadora.calcular();
-                });
+                UI.dom.tabelaImpostos.addEventListener('input', Calculadora.calcular);
+                UI.dom.valorBruto.addEventListener('input', Calculadora.calcular);
 
-                UI.dom.valorBruto.addEventListener('blur', () => {
-                    const valorNumerico = UI.parseCurrency(UI.dom.valorBruto.value);
-                    UI.dom.valorBruto.value = UI.formatarMoeda(valorNumerico);
+                UI.dom.valorBruto.addEventListener('blur', (e) => {
+                    const valorNumerico = UI.parseCurrency(e.target.value);
+                    e.target.value = UI.formatarMoeda(valorNumerico);
                 });
 
                 UI.dom.tabelaImpostos.addEventListener('blur', (e) => {
                     if (e.target.id.startsWith('base_')) {
                         const valorNumerico = UI.parseCurrency(e.target.value);
-                        if (valorNumerico > 0) {
-                           e.target.value = UI.formatarMoeda(valorNumerico);
-                        } else {
-                           e.target.value = ''; // Limpa se for zero para mostrar o placeholder "Auto"
-                        }
+                        e.target.value = valorNumerico > 0 ? UI.formatarMoeda(valorNumerico) : '';
                     }
-                }, true); // Use capturing para garantir que o evento de blur seja capturado
+                }, true);
 
                 UI.dom.simplesNacionalToggle.addEventListener('change', (e) => {
                     AppState.isSimplesNacional = e.target.checked;
                     AppState.impostos.forEach((imposto) => {
-                        // MELHORIA: A regra do simples agora também se aplica ao IR
-                        if (['PIS', 'COFINS', 'CSLL', 'IR'].includes(imposto.nome)) {
-                            if (AppState.isSimplesNacional) {
-                                AppState.retemStateBeforeSimples[imposto.nome] = imposto.retem;
-                                imposto.retem = '';
-                            } else {
-                                imposto.retem = AppState.retemStateBeforeSimples[imposto.nome] ?? 'x';
-                            }
+                        if (imposto.isDefault) { // Apenas impostos padrão são afetados
+                             imposto.retem = !AppState.isSimplesNacional;
                         }
                     });
                     this.syncUIAndCalculate();
@@ -363,10 +335,14 @@
 
                 UI.dom.btnMarcarPadrao.addEventListener('click', () => {
                     const isSimples = AppState.isSimplesNacional;
+                    // Verifica se todos os impostos padrão (não simples) já estão marcados
+                    const allMarked = AppState.impostos.every(imp => !imp.isDefault || imp.retem);
+                    
                     AppState.impostos.forEach((imposto) => {
-                        if (!imposto.especial) {
+                        if (imposto.isDefault) {
                             const isFederal = ['PIS', 'COFINS', 'CSLL', 'IR'].includes(imposto.nome);
-                            imposto.retem = !(isSimples && isFederal) ? 'x' : '';
+                            // Se todos estiverem marcados, desmarca. Senão, marca.
+                            imposto.retem = allMarked ? false : !(isSimples && isFederal);
                         }
                     });
                     this.syncUIAndCalculate();
@@ -374,15 +350,12 @@
 
                 UI.dom.btnMarcarTecnica.addEventListener('click', () => {
                     AppState.impostos.forEach((imposto) => {
-                        if (imposto.especial) {
-                            imposto.retem = imposto.retem === 'x' ? '' : 'x'; // Toggle state
-                        }
+                        if (imposto.especial) imposto.retem = !imposto.retem;
                     });
                     this.syncUIAndCalculate();
                 });
                 
                 UI.dom.btnResetar.addEventListener('click', () => {
-                    // CORREÇÃO: Removido o confirm() que pode falhar em alguns ambientes
                     AppState.resetarConfiguracoes();
                     UI.dom.simplesNacionalToggle.checked = false;
                     UI.criarTabela();
@@ -406,13 +379,11 @@
             UI.setSignature();
             Eventos.setup();
             
-            // Força a formatação inicial do valor
             const valorInicial = UI.parseCurrency(UI.dom.valorBruto.value);
             UI.dom.valorBruto.value = UI.formatarMoeda(valorInicial);
             
             Calculadora.calcular();
         });
-
     </script>
 </body>
 </html>
