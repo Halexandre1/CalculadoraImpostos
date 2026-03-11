@@ -13,114 +13,84 @@
         tailwind.config = { darkMode: 'class' }
     </script>
     <style>
-        body { 
-            font-family: 'Inter', sans-serif; 
-        }
-        
+        body { font-family: 'Inter', sans-serif; }
+
         .save-indicator {
             transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
             opacity: 0;
             transform: translateY(-10px);
         }
-        
-        .save-indicator.show {
-            opacity: 1;
-            transform: translateY(0);
+        .save-indicator.show { opacity: 1; transform: translateY(0); }
+
+        tr.disabled-row { opacity: 0.6; transition: opacity 0.3s ease; }
+        tr.disabled-row input:not([type="checkbox"]), tr.disabled-row select {
+            background-color: #f1f5f9; cursor: not-allowed; pointer-events: none; color: #94a3b8;
         }
-        
-        /* --- ESTILOS DE ESTADO (ATIVO/INATIVO) --- */
-        tr.disabled-row {
-            opacity: 0.6;
-            transition: opacity 0.3s ease;
-        }
-        
-        /* Bloqueia inputs de texto/select quando desativado, mas mantém checkbox clicável */
-        tr.disabled-row input:not([type="checkbox"]), 
-        tr.disabled-row select {
-            background-color: #f1f5f9;
-            cursor: not-allowed;
-            pointer-events: none;
-            color: #94a3b8;
+        tr.disabled-row input[type="checkbox"] { cursor: pointer; pointer-events: auto; }
+        .dark tr.disabled-row input:not([type="checkbox"]), .dark tr.disabled-row select {
+            background-color: #334155; color: #64748b;
         }
 
-        tr.disabled-row input[type="checkbox"] {
-            cursor: pointer;
-            pointer-events: auto;
-        }
-        
-        .dark tr.disabled-row input:not([type="checkbox"]), 
-        .dark tr.disabled-row select {
-            background-color: #334155;
-            color: #64748b;
-        }
-        /* ----------------------------------------- */
-        
-        .section-collapsible {
-            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
-            overflow: hidden;
-        }
-        
-        .section-collapsible.collapsed {
-            max-height: 0;
-            opacity: 0;
-        }
-        
-        .section-collapsible.expanded {
-            max-height: 1000px;
-            opacity: 1;
-        }
-        
-        .logo-img {
-            transition: transform 0.2s ease;
-        }
-        
-        .logo-img:hover {
-            transform: scale(1.05);
-        }
-        
-        .heart {
-            color: #ef4444;
-            animation: heartbeat 1.5s ease-in-out infinite;
-        }
-        
-        @keyframes heartbeat {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-        }
-        
-        /* Scrollbar customizada */
+        .section-collapsible { transition: max-height 0.3s ease-out, opacity 0.3s ease-out; overflow: hidden; }
+        .section-collapsible.collapsed { max-height: 0; opacity: 0; }
+        .section-collapsible.expanded { max-height: 3000px; opacity: 1; }
+
+        .logo-img { transition: transform 0.2s ease; }
+        .logo-img:hover { transform: scale(1.05); }
+
+        .heart { color: #ef4444; animation: heartbeat 1.5s ease-in-out infinite; }
+        @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
         .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
         .dark .custom-scrollbar::-webkit-scrollbar-track { background: #334155; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+        /* ========== MODAL DE IMPRESSÃO ========== */
+        #printModal { transition: opacity 0.2s ease; }
+        #printModal.hidden { display: none !important; }
+
+        .receipt-line { border-bottom: 1px dashed #cbd5e1; }
+        .dark .receipt-line { border-bottom: 1px dashed #475569; }
+
+        /* ========== ESTILOS DE IMPRESSÃO ========== */
+        @media print {
+            body > * { display: none !important; }
+            #printModal { display: flex !important; position: static !important; background: none !important; padding: 0 !important; }
+            #printModalOverlay { display: none !important; }
+            #printContent {
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                border: none !important;
+            }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+        }
+        .print-only { display: none; }
     </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 text-slate-800 dark:text-slate-200 min-h-screen p-4">
 
     <div class="container mx-auto max-w-6xl">
-        
+
         <!-- CABEÇALHO -->
         <div class="bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 p-6 mb-4 relative">
-            <button id="themeToggle" 
-                    class="absolute top-4 right-4 w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-all hover:scale-110 hover:rotate-12" 
-                    aria-label="Alternar tema">
-                🌙
-            </button>
+            <button id="themeToggle"
+                    class="absolute top-4 right-4 w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-all hover:scale-110 hover:rotate-12"
+                    aria-label="Alternar tema">🌙</button>
 
             <div class="flex items-center gap-4">
-                <img src="https://raw.githubusercontent.com/Halexandre1/PDF_PRO/main/HERBERT.jpg" 
-                     alt="Logo HAlexandre" 
+                <img src="https://raw.githubusercontent.com/Halexandre1/PDF_PRO/main/HERBERT.jpg"
+                     alt="Logo HAlexandre"
                      class="logo-img w-16 h-16 rounded-xl object-cover border-2 border-indigo-300 dark:border-indigo-600 shadow-lg">
                 <div class="flex-1">
-                    <h1 class="text-3xl font-extrabold text-slate-800 dark:text-white">
-                        Calculadora de Impostos
-                    </h1>
-                    <p class="text-slate-500 dark:text-slate-400 text-sm">
-                        Análise profissional de retenções em notas fiscais
-                    </p>
+                    <h1 class="text-3xl font-extrabold text-slate-800 dark:text-white">Calculadora de Impostos</h1>
+                    <p class="text-slate-500 dark:text-slate-400 text-sm">Análise profissional de retenções em notas fiscais</p>
                 </div>
-                <div id="saveIndicator" 
+                <div id="saveIndicator"
                      class="save-indicator absolute top-6 right-16 text-xs bg-green-500 text-white px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
                     <i class="fas fa-check-circle"></i> Salvo!
                 </div>
@@ -129,20 +99,16 @@
 
         <!-- LAYOUT RESPONSIVO -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-            
-            <!-- COLUNA ESQUERDA: CONFIGURAÇÕES -->
+
+            <!-- COLUNA ESQUERDA -->
             <div class="lg:col-span-5 space-y-4">
-                
+
                 <!-- VALOR BRUTO -->
                 <div class="bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-6">
-                    <label for="valorBruto" 
-                           class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 uppercase tracking-wide">
+                    <label for="valorBruto" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-3 uppercase tracking-wide">
                         💵 Valor Bruto da Nota (R$)
                     </label>
-                    <input type="text" 
-                           id="valorBruto" 
-                           value="R$ 1.000,00" 
-                           placeholder="Digite o valor" 
+                    <input type="text" id="valorBruto" value="R$ 1.000,00" placeholder="Digite o valor"
                            class="w-full p-4 text-center text-2xl font-bold bg-slate-50 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-600 rounded-lg focus:ring-4 focus:ring-indigo-500 focus:border-indigo-500 transition" />
                 </div>
 
@@ -151,20 +117,16 @@
                     <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 uppercase tracking-wide flex items-center gap-2">
                         <i class="fas fa-building text-indigo-500"></i> Regime Fiscal
                     </h3>
-                    
                     <label for="simplesNacionalToggle" class="flex items-center justify-between cursor-pointer group">
                         <div class="flex items-center gap-3">
                             <div class="relative">
-                                <input type="checkbox" id="simplesNacionalToggle" class="sr-only peer">
+                                <input type="checkbox" id="simplesNacionalToggle" role="switch" aria-checked="false" class="sr-only peer">
                                 <div class="w-14 h-8 bg-gray-300 rounded-full dark:bg-gray-600 peer-checked:bg-indigo-600 transition-all"></div>
                                 <div class="absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-all transform peer-checked:translate-x-6 shadow-md"></div>
                             </div>
-                            <div class="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                Tomador é Simples Nacional?
-                            </div>
+                            <div class="text-sm font-medium text-slate-700 dark:text-slate-300">Prestador é Simples Nacional?</div>
                         </div>
                     </label>
-                    
                     <p id="regimeHint" class="mt-3 text-xs text-slate-500 dark:text-slate-400 leading-relaxed"></p>
                 </div>
 
@@ -173,45 +135,48 @@
                     <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 mb-4 uppercase tracking-wide flex items-center gap-2">
                         <i class="fas fa-magic text-indigo-500"></i> Ações Rápidas
                     </h3>
-                    
                     <div class="grid grid-cols-1 gap-3">
-                        <button id="btnMarcarPadrao" 
+                        <button id="btnMarcarPadrao"
                                 class="bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-600 hover:to-blue-600 text-white font-semibold py-3 px-4 rounded-lg text-sm transition-all shadow-md hover:shadow-xl transform hover:-translate-y-0.5">
                             <i class="fas fa-check-double mr-2"></i> Padrão (Federais + IR)
                         </button>
-                        
-                        <button id="btnMarcarTecnica" 
+                        <button id="btnMarcarTecnica"
                                 class="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold py-3 px-4 rounded-lg text-sm transition-all shadow-md hover:shadow-xl transform hover:-translate-y-0.5">
                             <i class="fas fa-wrench mr-2"></i> Retenção Técnica
                         </button>
-                        
-                        <button id="btnResetar" 
+                        <!-- NOVO: Botão Imprimir -->
+                        <button id="btnImprimir"
+                                class="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg text-sm transition-all shadow-md hover:shadow-xl transform hover:-translate-y-0.5">
+                            <i class="fas fa-print mr-2"></i> Visualizar / Imprimir
+                        </button>
+                        <button id="btnResetar"
                                 class="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold py-3 px-4 rounded-lg text-sm transition-all shadow-md hover:shadow-xl transform hover:-translate-y-0.5">
                             <i class="fas fa-undo mr-2"></i> Resetar Tudo
                         </button>
                     </div>
                 </div>
-
             </div>
 
-            <!-- COLUNA DIREITA: RESULTADOS -->
+            <!-- COLUNA DIREITA -->
             <div class="lg:col-span-7 space-y-4">
-                
-                <!-- RESUMO -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div id="subtotalTrio" class="bg-gradient-to-br from-cyan-500 to-blue-600 text-white rounded-xl shadow-xl p-5 text-center">
-                        <span class="block text-xs opacity-90 uppercase tracking-wide mb-2">📈 PIS/COFINS/CSLL</span>
-                        <div class="text-2xl font-extrabold">R$ 0,00</div>
+
+                <!-- CARDS RESUMO -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div id="subtotalTrio" class="bg-gradient-to-br from-cyan-500 to-blue-600 text-white rounded-xl shadow-xl p-4 text-center">
+                        <span class="block text-xs opacity-90 uppercase tracking-wide mb-2">📈 Federais</span>
+                        <div class="text-xl font-extrabold">R$ 0,00</div>
                     </div>
-                    
-                    <div id="retencaoTecnica" class="bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-xl shadow-xl p-5 text-center">
+                    <div id="retencaoTecnica" class="bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-xl shadow-xl p-4 text-center">
                         <span class="block text-xs opacity-90 uppercase tracking-wide mb-2">🔧 Ret. Técnica</span>
-                        <div class="text-2xl font-extrabold">R$ 0,00</div>
+                        <div class="text-xl font-extrabold">R$ 0,00</div>
                     </div>
-                    
-                    <div id="resultado" class="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl shadow-xl p-5 text-center">
-                        <span class="block text-xs opacity-90 uppercase tracking-wide mb-2">🎯 Líquido a Receber</span>
-                        <div class="text-2xl font-extrabold">R$ 0,00</div>
+                    <div id="totalRetido" class="bg-gradient-to-br from-red-500 to-rose-600 text-white rounded-xl shadow-xl p-4 text-center">
+                        <span class="block text-xs opacity-90 uppercase tracking-wide mb-2">📉 Total Retido</span>
+                        <div class="text-xl font-extrabold">R$ 0,00</div>
+                    </div>
+                    <div id="resultado" class="bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-xl shadow-xl p-4 text-center">
+                        <span class="block text-xs opacity-90 uppercase tracking-wide mb-2">🎯 Líquido</span>
+                        <div class="text-xl font-extrabold">R$ 0,00</div>
                     </div>
                 </div>
 
@@ -221,11 +186,11 @@
                         <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide flex items-center gap-2">
                             <i class="fas fa-table text-indigo-500"></i> Detalhamento dos Impostos
                         </h3>
-                        <button id="btnToggleTable" class="text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors">
+                        <button id="btnToggleTable" aria-expanded="true" aria-controls="tableWrapper"
+                                class="text-slate-500 hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400 transition-colors">
                             <i class="fas fa-chevron-up"></i>
                         </button>
                     </div>
-                    
                     <div id="tableWrapper" class="section-collapsible expanded">
                         <div class="overflow-x-auto custom-scrollbar max-h-96">
                             <table class="w-full text-sm text-left text-slate-500 dark:text-slate-400">
@@ -243,14 +208,13 @@
                         </div>
                     </div>
                 </div>
-
             </div>
         </div>
 
         <!-- RODAPÉ -->
         <footer class="mt-6 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-6 text-center">
             <p class="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                <strong>⚖️ Aviso:</strong> Ferramenta para fins educacionais e de conferência. 
+                <strong>⚖️ Aviso:</strong> Ferramenta para fins educacionais e de conferência.
             </p>
             <p class="text-sm font-semibold text-slate-700 dark:text-slate-300">
                 Feito com <span class="heart">❤️</span> por <strong>HAlexandre</strong> © <span id="currentYear"></span>
@@ -258,16 +222,131 @@
         </footer>
     </div>
 
-    <script>
-        /**
-         * ================================================================
-         * CALCULADORA DE IMPOSTOS - VERSÃO GITHUB READY
-         * @author HAlexandre
-         * @version 5.1.0
-         * @description Calculadora completa com persistência de estado e validações fiscais.
-         * ================================================================
-         */
+    <!-- ========== MODAL DE IMPRESSÃO ========== -->
+    <div id="printModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+        <!-- Overlay -->
+        <div id="printModalOverlay" class="no-print absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
 
+        <!-- Conteúdo do Recibo -->
+        <div id="printContent" class="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+
+            <!-- Cabeçalho do Recibo -->
+            <div class="bg-gradient-to-r from-indigo-600 to-violet-700 p-5 text-center text-white">
+                <img src="https://raw.githubusercontent.com/Halexandre1/PDF_PRO/main/HERBERT.jpg"
+                     alt="Logo" class="w-12 h-12 rounded-lg object-cover border-2 border-white/40 shadow mx-auto mb-2">
+                <h2 class="text-base font-extrabold tracking-wide uppercase">Comprovante de Retenções</h2>
+                <p class="text-xs opacity-80 mt-1">Nota Fiscal de Serviços</p>
+                <p id="printData" class="text-xs opacity-70 mt-0.5"></p>
+            </div>
+
+            <!-- Corpo do Recibo -->
+            <div class="p-5 space-y-1 font-mono text-sm text-slate-700 dark:text-slate-300">
+
+                <!-- Valor Bruto -->
+                <div class="flex justify-between items-center py-2 receipt-line">
+                    <span class="font-semibold text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide">Valor Bruto</span>
+                    <span id="prtValorBruto" class="font-bold text-slate-800 dark:text-white text-base">R$ 0,00</span>
+                </div>
+
+                <!-- Regime -->
+                <div id="prtRegimeBox" class="hidden flex justify-between items-center py-2 receipt-line">
+                    <span class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">
+                        <i class="fas fa-info-circle mr-1"></i> Simples Nacional
+                    </span>
+                </div>
+
+                <!-- Separador "Retenções" -->
+                <div class="pt-3 pb-1">
+                    <p class="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 text-center">— Retenções —</p>
+                </div>
+
+                <!-- Federais (PIS/COFINS/CSLL) -->
+                <div id="prtFederaisRow" class="flex justify-between items-center py-2.5 receipt-line">
+                    <div>
+                        <span class="font-semibold text-slate-700 dark:text-slate-200">Federais</span>
+                        <span class="block text-xs text-slate-400 dark:text-slate-500">PIS / COFINS / CSLL</span>
+                    </div>
+                    <span id="prtFederais" class="font-bold text-red-600 dark:text-red-400">R$ 0,00</span>
+                </div>
+
+                <!-- IR -->
+                <div id="prtIrRow" class="flex justify-between items-center py-2.5 receipt-line">
+                    <div>
+                        <span class="font-semibold text-slate-700 dark:text-slate-200">IR (IRRF)</span>
+                        <span id="prtIrAliq" class="block text-xs text-slate-400 dark:text-slate-500"></span>
+                    </div>
+                    <span id="prtIr" class="font-bold text-red-600 dark:text-red-400">R$ 0,00</span>
+                </div>
+
+                <!-- ISS -->
+                <div id="prtIssRow" class="flex justify-between items-center py-2.5 receipt-line">
+                    <div>
+                        <span class="font-semibold text-slate-700 dark:text-slate-200">ISS</span>
+                        <span id="prtIssAliq" class="block text-xs text-slate-400 dark:text-slate-500"></span>
+                    </div>
+                    <span id="prtIss" class="font-bold text-red-600 dark:text-red-400">R$ 0,00</span>
+                </div>
+
+                <!-- INSS (condicional) -->
+                <div id="prtInssRow" class="hidden flex justify-between items-center py-2.5 receipt-line">
+                    <div>
+                        <span class="font-semibold text-slate-700 dark:text-slate-200">INSS</span>
+                        <span id="prtInssAliq" class="block text-xs text-slate-400 dark:text-slate-500"></span>
+                    </div>
+                    <span id="prtInss" class="font-bold text-red-600 dark:text-red-400">R$ 0,00</span>
+                </div>
+
+                <!-- Retenção Técnica (condicional) -->
+                <div id="prtTecnicaRow" class="hidden flex justify-between items-center py-2.5 receipt-line">
+                    <div>
+                        <span class="font-semibold text-slate-700 dark:text-slate-200">Ret. Técnica</span>
+                        <span id="prtTecnicaAliq" class="block text-xs text-slate-400 dark:text-slate-500"></span>
+                    </div>
+                    <span id="prtTecnica" class="font-bold text-red-600 dark:text-red-400">R$ 0,00</span>
+                </div>
+
+                <!-- Total Retido -->
+                <div class="flex justify-between items-center py-3 border-t-2 border-slate-300 dark:border-slate-600 mt-2">
+                    <span class="font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wide text-xs">Total Retido</span>
+                    <span id="prtTotalRetido" class="font-extrabold text-red-600 dark:text-red-400 text-base">R$ 0,00</span>
+                </div>
+
+                <!-- Valor Líquido -->
+                <div class="flex justify-between items-center py-3 bg-emerald-50 dark:bg-emerald-900/30 rounded-xl px-3 mt-1">
+                    <span class="font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide text-xs">💰 Líquido a Receber</span>
+                    <span id="prtLiquido" class="font-extrabold text-emerald-600 dark:text-emerald-400 text-xl">R$ 0,00</span>
+                </div>
+
+                <!-- Aviso dispensado (se houver) -->
+                <div id="prtDispensados" class="hidden mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-700">
+                    <p class="text-xs text-yellow-700 dark:text-yellow-400 font-semibold text-center">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        <span id="prtDispensadosText"></span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Rodapé do recibo -->
+            <div class="px-5 pb-4 text-center">
+                <p class="text-xs text-slate-400 dark:text-slate-500 mb-3">
+                    ⚖️ Documento para conferência — HAlexandre
+                </p>
+                <!-- Botões (não aparecem na impressão) -->
+                <div class="no-print flex gap-2">
+                    <button id="btnPrint"
+                            class="flex-1 bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 text-white font-bold py-2.5 rounded-xl text-sm transition-all shadow-md hover:shadow-xl flex items-center justify-center gap-2">
+                        <i class="fas fa-print"></i> Imprimir
+                    </button>
+                    <button id="btnFecharModal"
+                            class="flex-1 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-bold py-2.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2">
+                        <i class="fas fa-times"></i> Fechar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
         const FiscalRules = {
             MIN_IR: 10.00,
             MIN_TRIO: 10.00,
@@ -275,47 +354,35 @@
         };
 
         const TaxConfig = {
-            INSS: { code: 'INSS', label: 'INSS', group: 'PREV', isDefault: true, defaultRate: 11.00, defaultRetain: false },
-            ISS: { code: 'ISS', label: 'ISS', group: 'MUN', isDefault: true, defaultRate: 5.00, defaultRetain: false },
-            PIS: { code: 'PIS', label: 'PIS', group: 'CSRF', inTrio: true, hasMinGroupRule: true, isDefault: true, defaultRate: 0.65, defaultRetain: true },
-            COFINS: { code: 'COFINS', label: 'COFINS', group: 'CSRF', inTrio: true, hasMinGroupRule: true, isDefault: true, defaultRate: 3.00, defaultRetain: true },
-            CSLL: { code: 'CSLL', label: 'CSLL', group: 'CSRF', inTrio: true, hasMinGroupRule: true, isDefault: true, defaultRate: 1.00, defaultRetain: true },
-            IR: { code: 'IR', label: 'IR', group: 'IR', hasMinOwnRule: true, minOwn: FiscalRules.MIN_IR, selectOptions: [1.00, 1.50], isDefault: true, defaultRate: 1.50, defaultRetain: true },
-            TECNICA: { code: 'RETENCAO_TECNICA', label: 'RETENÇÃO TÉCNICA', group: 'ESP', isSpecial: true, isDefault: false, defaultRate: 4.65, defaultRetain: false }
+            INSS:    { code: 'INSS',             label: 'INSS',              group: 'PREV', isDefault: true,  defaultRate: 11.00, defaultRetain: false },
+            ISS:     { code: 'ISS',              label: 'ISS',               group: 'MUN',  isDefault: true,  defaultRate: 5.00,  defaultRetain: false },
+            PIS:     { code: 'PIS',              label: 'PIS',               group: 'CSRF', inTrio: true, hasMinGroupRule: true, isDefault: true, defaultRate: 0.65, defaultRetain: true },
+            COFINS:  { code: 'COFINS',           label: 'COFINS',            group: 'CSRF', inTrio: true, hasMinGroupRule: true, isDefault: true, defaultRate: 3.00, defaultRetain: true },
+            CSLL:    { code: 'CSLL',             label: 'CSLL',              group: 'CSRF', inTrio: true, hasMinGroupRule: true, isDefault: true, defaultRate: 1.00, defaultRetain: true },
+            IR:      { code: 'IR',               label: 'IR',                group: 'IR',   hasMinOwnRule: true, minOwn: FiscalRules.MIN_IR, selectOptions: [1.00, 1.50, 2.00, 3.00], isDefault: true, defaultRate: 1.50, defaultRetain: true },
+            TECNICA: { code: 'RETENCAO_TECNICA', label: 'RETENÇÃO TÉCNICA',  group: 'ESP',  isSpecial: true, isDefault: false, defaultRate: 4.65, defaultRetain: false }
         };
 
         function createTaxState(config) {
             return {
-                code: config.code,
-                label: config.label,
-                group: config.group,
-                inTrio: !!config.inTrio,
-                isDefault: !!config.isDefault,
-                isSpecial: !!config.isSpecial,
+                code: config.code, label: config.label, group: config.group,
+                inTrio: !!config.inTrio, isDefault: !!config.isDefault, isSpecial: !!config.isSpecial,
                 selectOptions: config.selectOptions || null,
-                aliquota: config.defaultRate,
-                retem: config.defaultRetain,
-                baseCustom: null // null = usa o bruto, número = usa o valor (mesmo que 0)
+                aliquota: config.defaultRate, retem: config.defaultRetain, baseCustom: null
             };
         }
 
         const AppState = {
             isSimplesNacional: false,
             impostos: [],
+            lastResult: null,
 
-            getDefaultImpostos() {
-                return Object.values(TaxConfig).map(config => createTaxState(config));
-            },
+            getDefaultImpostos() { return Object.values(TaxConfig).map(c => createTaxState(c)); },
 
             salvar() {
                 const snapshot = {
                     isSimplesNacional: this.isSimplesNacional,
-                    impostos: this.impostos.map(imp => ({
-                        code: imp.code,
-                        aliquota: imp.aliquota,
-                        retem: imp.retem,
-                        baseCustom: imp.baseCustom // Salva a base customizada
-                    }))
+                    impostos: this.impostos.map(imp => ({ code: imp.code, aliquota: imp.aliquota, retem: imp.retem, baseCustom: imp.baseCustom }))
                 };
                 localStorage.setItem(FiscalRules.STORAGE_KEY, JSON.stringify(snapshot));
                 UI.showSaveIndicator();
@@ -325,11 +392,9 @@
                 this.impostos = this.getDefaultImpostos();
                 const raw = localStorage.getItem(FiscalRules.STORAGE_KEY);
                 if (!raw) return;
-
                 try {
                     const parsed = JSON.parse(raw);
                     this.isSimplesNacional = !!parsed.isSimplesNacional;
-
                     if (Array.isArray(parsed.impostos)) {
                         parsed.impostos.forEach(saved => {
                             const target = this.impostos.find(i => i.code === saved.code);
@@ -340,10 +405,7 @@
                             }
                         });
                     }
-                } catch (err) {
-                    console.error('Erro ao carregar:', err);
-                    this.resetar();
-                }
+                } catch (err) { console.error('Erro ao carregar:', err); this.resetar(); }
             },
 
             resetar() {
@@ -358,123 +420,100 @@
                 const lines = [];
                 const trioCodes = impostos.filter(i => i.inTrio).map(i => i.code);
                 const totalTrio = trioCodes.reduce((sum, code) => sum + (rawValues[code] || 0), 0);
-
                 impostos.forEach(imp => {
                     let valor = rawValues[imp.code] || 0;
-                    let dispensado = false;
-                    let motivo = '';
-
+                    let dispensado = false, motivo = '';
                     if (imp.code === 'IR' && valor > 0 && valor < FiscalRules.MIN_IR) {
-                        valor = 0;
-                        dispensado = true;
-                        motivo = `IRRF inferior a R$ ${FiscalRules.MIN_IR.toFixed(2)}`;
+                        valor = 0; dispensado = true; motivo = `IRRF inferior a R$ ${FiscalRules.MIN_IR.toFixed(2)}`;
                     }
-
                     if (imp.inTrio && totalTrio > 0 && totalTrio < FiscalRules.MIN_TRIO) {
-                        valor = 0;
-                        dispensado = true;
-                        motivo = `Soma CSRF inferior a R$ ${FiscalRules.MIN_TRIO.toFixed(2)}`;
+                        valor = 0; dispensado = true; motivo = `Soma CSRF inferior a R$ ${FiscalRules.MIN_TRIO.toFixed(2)}`;
                     }
-
                     lines.push({ code: imp.code, valor, dispensado, motivo });
                 });
-
                 return { lines, totalTrio };
             },
 
-            applyRegime(lines, impostos, isSimplesNacional) {
+            applyRegime(lines, isSimplesNacional) {
                 if (!isSimplesNacional) return lines;
                 const federalTrio = ['PIS', 'COFINS', 'CSLL'];
-                return lines.map(line => {
-                    if (federalTrio.includes(line.code)) {
-                        return { ...line, valor: 0, dispensado: true, motivo: 'Simples Nacional dispensado de CSRF' };
-                    }
-                    return line;
-                });
+                return lines.map(line => federalTrio.includes(line.code)
+                    ? { ...line, valor: 0, dispensado: true, motivo: 'Simples Nacional dispensado de CSRF' }
+                    : line);
             }
         };
 
         const CalculatorService = {
             calculate(valorBruto, impostos) {
                 const rawValues = {};
-
                 impostos.forEach(imp => {
-                    // Lógica robusta: Se baseCustom for null, usa Bruto. Se for número (incluindo 0), usa custom.
                     const base = imp.baseCustom !== null ? imp.baseCustom : valorBruto;
                     rawValues[imp.code] = imp.retem ? (base * imp.aliquota) / 100 : 0;
                 });
-
                 let { lines, totalTrio } = TaxRulesEngine.applyMinimums(rawValues, impostos);
-                lines = TaxRulesEngine.applyRegime(lines, impostos, AppState.isSimplesNacional);
+                lines = TaxRulesEngine.applyRegime(lines, AppState.isSimplesNacional);
 
-                let totalRetido = 0;
-                let subtotalTrio = 0;
-                let retencaoTecnicaValor = 0;
-
+                let totalRetido = 0, subtotalTrio = 0, retencaoTecnicaValor = 0;
                 lines.forEach(line => {
                     const imp = impostos.find(i => i.code === line.code);
-                    if (!imp) return;
-                    if (imp.retem) totalRetido += line.valor;
-                    if (imp.inTrio && imp.retem) subtotalTrio += line.valor;
-                    if (imp.isSpecial && imp.retem) retencaoTecnicaValor += line.valor;
+                    if (!imp || !imp.retem) return;
+                    totalRetido += line.valor;
+                    if (imp.inTrio) subtotalTrio += line.valor;
+                    if (imp.isSpecial) retencaoTecnicaValor += line.valor;
                 });
 
-                return {
-                    valorLiquido: valorBruto - totalRetido,
-                    subtotalTrio,
-                    retencaoTecnicaValor,
-                    taxLines: lines
-                };
+                return { valorBruto, valorLiquido: valorBruto - totalRetido, totalRetido, subtotalTrio, retencaoTecnicaValor, taxLines: lines };
             }
         };
 
         const UI = {
             dom: {
-                tabelaImpostos: document.getElementById('tabelaImpostos'),
-                valorBruto: document.getElementById('valorBruto'),
-                resultado: document.getElementById('resultado'),
-                subtotalTrio: document.getElementById('subtotalTrio'),
-                retencaoTecnica: document.getElementById('retencaoTecnica'),
-                themeToggle: document.getElementById('themeToggle'),
-                simplesNacionalToggle: document.getElementById('simplesNacionalToggle'),
-                btnMarcarPadrao: document.getElementById('btnMarcarPadrao'),
-                btnMarcarTecnica: document.getElementById('btnMarcarTecnica'),
-                btnResetar: document.getElementById('btnResetar'),
-                btnToggleTable: document.getElementById('btnToggleTable'),
-                tableWrapper: document.getElementById('tableWrapper'),
-                saveIndicator: document.getElementById('saveIndicator'),
-                regimeHint: document.getElementById('regimeHint'),
-                currentYear: document.getElementById('currentYear')
+                tabelaImpostos:       document.getElementById('tabelaImpostos'),
+                valorBruto:           document.getElementById('valorBruto'),
+                resultado:            document.getElementById('resultado'),
+                subtotalTrio:         document.getElementById('subtotalTrio'),
+                retencaoTecnica:      document.getElementById('retencaoTecnica'),
+                totalRetido:          document.getElementById('totalRetido'),
+                themeToggle:          document.getElementById('themeToggle'),
+                simplesNacionalToggle:document.getElementById('simplesNacionalToggle'),
+                btnMarcarPadrao:      document.getElementById('btnMarcarPadrao'),
+                btnMarcarTecnica:     document.getElementById('btnMarcarTecnica'),
+                btnResetar:           document.getElementById('btnResetar'),
+                btnImprimir:          document.getElementById('btnImprimir'),
+                btnToggleTable:       document.getElementById('btnToggleTable'),
+                tableWrapper:         document.getElementById('tableWrapper'),
+                saveIndicator:        document.getElementById('saveIndicator'),
+                regimeHint:           document.getElementById('regimeHint'),
+                currentYear:          document.getElementById('currentYear'),
+                printModal:           document.getElementById('printModal'),
+                printModalOverlay:    document.getElementById('printModalOverlay'),
+                btnPrint:             document.getElementById('btnPrint'),
+                btnFecharModal:       document.getElementById('btnFecharModal'),
             },
-            
+
             saveIndicatorTimeout: null,
-            
+
             formatarMoeda(valor) {
                 return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor);
             },
-            
+
             parseCurrency(value) {
                 if (typeof value !== 'string') value = String(value);
-                const cleaned = value.replace(/[^0-9,-]+/g, "").replace(",", ".");
-                return parseFloat(cleaned) || 0;
+                const cleaned = value.replace(/[^\d,]/g, '').replace(',', '.');
+                const result = parseFloat(cleaned);
+                return isNaN(result) || result < 0 ? 0 : result;
             },
 
             criarTabela() {
                 this.dom.tabelaImpostos.innerHTML = '';
-                
                 AppState.impostos.forEach((imposto, i) => {
                     const tr = document.createElement('tr');
-                    tr.className = `border-b dark:border-slate-700 transition-all ${
-                        imposto.isSpecial 
-                            ? 'bg-amber-50 dark:bg-amber-900/20' 
-                            : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50'
-                    }`;
+                    tr.className = `border-b dark:border-slate-700 transition-all ${imposto.isSpecial ? 'bg-amber-50 dark:bg-amber-900/20' : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50'}`;
                     tr.id = `row_${i}`;
 
-                    // Geração do select ou input de alíquota
                     let aliquotaInput;
                     if (imposto.selectOptions) {
-                        const options = imposto.selectOptions.map(opt => 
+                        const options = imposto.selectOptions.map(opt =>
                             `<option value="${opt}"${imposto.aliquota === opt ? ' selected' : ''}>${opt.toFixed(2).replace('.', ',')}%</option>`
                         ).join('');
                         aliquotaInput = `<select id="aliquota_${i}" data-index="${i}" class="w-full p-2 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-center text-sm focus:ring-2 focus:ring-indigo-500">${options}</select>`;
@@ -482,17 +521,11 @@
                         aliquotaInput = `<input type="number" id="aliquota_${i}" data-index="${i}" value="${imposto.aliquota.toFixed(2)}" class="w-full p-2 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-center text-sm focus:ring-2 focus:ring-indigo-500" />`;
                     }
 
-                    // Valor inicial da base (se customizada, mostra valor, senão vazio/auto)
                     const baseValue = imposto.baseCustom !== null ? this.formatarMoeda(imposto.baseCustom) : '';
-
                     tr.innerHTML = `
                         <td class="px-4 py-3 font-semibold text-gray-900 dark:text-white whitespace-nowrap">${imposto.label}</td>
                         <td class="px-4 py-3">
-                            <input type="text" 
-                                   id="base_${i}" 
-                                   data-index="${i}" 
-                                   placeholder="Auto" 
-                                   value="${baseValue}"
+                            <input type="text" id="base_${i}" data-index="${i}" placeholder="Auto" value="${baseValue}"
                                    class="w-full p-2 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded-md text-center text-sm focus:ring-2 focus:ring-indigo-500 font-mono" />
                         </td>
                         <td class="px-4 py-3">${aliquotaInput}</td>
@@ -505,27 +538,23 @@
                 });
             },
 
-            atualizarResultados({ valorLiquido, subtotalTrio, retencaoTecnicaValor, taxLines }) {
-                this.dom.resultado.innerHTML = `
-                    <span class="block text-xs opacity-90 uppercase tracking-wide mb-2">🎯 Líquido a Receber</span>
-                    <div class="text-2xl font-extrabold">${this.formatarMoeda(valorLiquido)}</div>
-                `;
-                this.dom.subtotalTrio.innerHTML = `
-                    <span class="block text-xs opacity-90 uppercase tracking-wide mb-2">📈 PIS/COFINS/CSLL</span>
-                    <div class="text-2xl font-extrabold">${this.formatarMoeda(subtotalTrio)}</div>
-                `;
-                this.dom.retencaoTecnica.innerHTML = `
-                    <span class="block text-xs opacity-90 uppercase tracking-wide mb-2">🔧 Ret. Técnica</span>
-                    <div class="text-2xl font-extrabold">${this.formatarMoeda(retencaoTecnicaValor)}</div>
-                `;
+            atualizarResultados(result) {
+                AppState.lastResult = result;
+                const { valorLiquido, subtotalTrio, retencaoTecnicaValor, totalRetido, taxLines } = result;
 
-                taxLines.forEach((line, idx) => {
-                    const elValor = document.getElementById(`valor_${idx}`);
-                    const elRow = document.getElementById(`row_${idx}`);
+                this.dom.resultado.innerHTML = `<span class="block text-xs opacity-90 uppercase tracking-wide mb-1">🎯 Líquido</span><div class="text-xl font-extrabold">${this.formatarMoeda(valorLiquido)}</div>`;
+                this.dom.subtotalTrio.innerHTML = `<span class="block text-xs opacity-90 uppercase tracking-wide mb-1">📈 Federais</span><div class="text-xl font-extrabold">${this.formatarMoeda(subtotalTrio)}</div>`;
+                this.dom.retencaoTecnica.innerHTML = `<span class="block text-xs opacity-90 uppercase tracking-wide mb-1">🔧 Ret. Técnica</span><div class="text-xl font-extrabold">${this.formatarMoeda(retencaoTecnicaValor)}</div>`;
+                this.dom.totalRetido.innerHTML = `<span class="block text-xs opacity-90 uppercase tracking-wide mb-1">📉 Total Retido</span><div class="text-xl font-extrabold">${this.formatarMoeda(totalRetido)}</div>`;
+
+                taxLines.forEach((line) => {
+                    const idx = AppState.impostos.findIndex(i => i.code === line.code);
+                    if (idx === -1) return;
                     const imp = AppState.impostos[idx];
-                    
+                    const elValor = document.getElementById(`valor_${idx}`);
+                    const elRow   = document.getElementById(`row_${idx}`);
+
                     if (elRow) elRow.classList.toggle('disabled-row', !imp.retem);
-                    
                     if (elValor) {
                         if (line.dispensado) {
                             elValor.innerHTML = `<span class="text-xs text-yellow-600 dark:text-yellow-400 font-semibold" title="${line.motivo}">⚠️ Dispensado</span>`;
@@ -537,16 +566,115 @@
                 });
 
                 this.dom.regimeHint.textContent = AppState.isSimplesNacional
-                    ? '✅ Tomador Simples Nacional: PIS/COFINS/CSLL desativados. IR mantido conforme legislação.'
+                    ? '✅ Prestador Simples Nacional: PIS/COFINS/CSLL dispensados. IR mantido conforme legislação.'
                     : '';
             },
-            
+
+            // ======== MODAL DE IMPRESSÃO ========
+            abrirModalImpressao() {
+                const result  = AppState.lastResult;
+                const impostos = AppState.impostos;
+                if (!result) return;
+
+                // Data
+                const now = new Date();
+                document.getElementById('printData').textContent =
+                    now.toLocaleDateString('pt-BR') + ' às ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+                // Valor Bruto
+                document.getElementById('prtValorBruto').textContent = this.formatarMoeda(result.valorBruto);
+
+                // Regime
+                const regimeBox = document.getElementById('prtRegimeBox');
+                if (AppState.isSimplesNacional) {
+                    regimeBox.classList.remove('hidden');
+                } else {
+                    regimeBox.classList.add('hidden');
+                }
+
+                // Helper: pega valor final de um imposto pelo code
+                const getVal = (code) => {
+                    const line = result.taxLines.find(l => l.code === code);
+                    const imp  = impostos.find(i => i.code === code);
+                    if (!line || !imp || !imp.retem || line.dispensado) return { valor: 0, dispensado: line ? line.dispensado : false, motivo: line ? line.motivo : '' };
+                    return { valor: line.valor, dispensado: false, motivo: '' };
+                };
+
+                // Federais (soma PIS+COFINS+CSLL)
+                const pis    = getVal('PIS');
+                const cofins = getVal('COFINS');
+                const csll   = getVal('CSLL');
+                const totalFederais = pis.valor + cofins.valor + csll.valor;
+
+                // Mostrar/ocultar cada linha baseando-se no estado
+                const impPis = impostos.find(i => i.code === 'PIS');
+                const showFederais = impPis && impPis.retem;
+
+                const prtFederaisRow = document.getElementById('prtFederaisRow');
+                prtFederaisRow.classList.toggle('hidden', !showFederais);
+                document.getElementById('prtFederais').textContent = this.formatarMoeda(totalFederais);
+
+                // IR
+                const irData  = getVal('IR');
+                const impIr   = impostos.find(i => i.code === 'IR');
+                const showIr  = impIr && impIr.retem;
+                document.getElementById('prtIrRow').classList.toggle('hidden', !showIr);
+                document.getElementById('prtIr').textContent    = irData.dispensado ? '⚠️ Dispensado' : this.formatarMoeda(irData.valor);
+                document.getElementById('prtIrAliq').textContent = impIr ? `Alíquota: ${impIr.aliquota.toFixed(2).replace('.',',')}%` : '';
+
+                // ISS
+                const issData  = getVal('ISS');
+                const impIss   = impostos.find(i => i.code === 'ISS');
+                const showIss  = impIss && impIss.retem;
+                document.getElementById('prtIssRow').classList.toggle('hidden', !showIss);
+                document.getElementById('prtIss').textContent    = this.formatarMoeda(issData.valor);
+                document.getElementById('prtIssAliq').textContent = impIss ? `Alíquota: ${impIss.aliquota.toFixed(2).replace('.',',')}%` : '';
+
+                // INSS (condicional)
+                const inssData  = getVal('INSS');
+                const impInss   = impostos.find(i => i.code === 'INSS');
+                const showInss  = impInss && impInss.retem;
+                document.getElementById('prtInssRow').classList.toggle('hidden', !showInss);
+                document.getElementById('prtInss').textContent    = this.formatarMoeda(inssData.valor);
+                document.getElementById('prtInssAliq').textContent = impInss ? `Alíquota: ${impInss.aliquota.toFixed(2).replace('.',',')}%` : '';
+
+                // Retenção Técnica (condicional)
+                const tecData  = getVal('RETENCAO_TECNICA');
+                const impTec   = impostos.find(i => i.code === 'RETENCAO_TECNICA');
+                const showTec  = impTec && impTec.retem;
+                document.getElementById('prtTecnicaRow').classList.toggle('hidden', !showTec);
+                document.getElementById('prtTecnica').textContent    = this.formatarMoeda(tecData.valor);
+                document.getElementById('prtTecnicaAliq').textContent = impTec ? `Alíquota: ${impTec.aliquota.toFixed(2).replace('.',',')}%` : '';
+
+                // Total Retido e Líquido
+                document.getElementById('prtTotalRetido').textContent = this.formatarMoeda(result.totalRetido);
+                document.getElementById('prtLiquido').textContent     = this.formatarMoeda(result.valorLiquido);
+
+                // Avisos de dispensa
+                const dispensados = result.taxLines.filter(l => l.dispensado).map(l => l.motivo);
+                const prtDisp = document.getElementById('prtDispensados');
+                if (dispensados.length > 0) {
+                    prtDisp.classList.remove('hidden');
+                    document.getElementById('prtDispensadosText').textContent = [...new Set(dispensados)].join(' | ');
+                } else {
+                    prtDisp.classList.add('hidden');
+                }
+
+                // Exibir modal
+                this.dom.printModal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            },
+
+            fecharModalImpressao() {
+                this.dom.printModal.classList.add('hidden');
+                document.body.style.overflow = '';
+            },
+            // =====================================
+
             showSaveIndicator() {
                 clearTimeout(this.saveIndicatorTimeout);
                 this.dom.saveIndicator.classList.add('show');
-                this.saveIndicatorTimeout = setTimeout(() => {
-                    this.dom.saveIndicator.classList.remove('show');
-                }, 1500);
+                this.saveIndicatorTimeout = setTimeout(() => this.dom.saveIndicator.classList.remove('show'), 1500);
             },
 
             loadTheme() {
@@ -570,28 +698,26 @@
 
             toggleTable() {
                 const wrapper = this.dom.tableWrapper;
-                const btn = this.dom.btnToggleTable;
+                const btn     = this.dom.btnToggleTable;
                 const isExpanded = wrapper.classList.contains('expanded');
                 if (isExpanded) {
-                    wrapper.classList.remove('expanded');
-                    wrapper.classList.add('collapsed');
+                    wrapper.classList.replace('expanded', 'collapsed');
                     btn.innerHTML = '<i class="fas fa-chevron-down"></i>';
+                    btn.setAttribute('aria-expanded', 'false');
                 } else {
-                    wrapper.classList.remove('collapsed');
-                    wrapper.classList.add('expanded');
+                    wrapper.classList.replace('collapsed', 'expanded');
                     btn.innerHTML = '<i class="fas fa-chevron-up"></i>';
+                    btn.setAttribute('aria-expanded', 'true');
                 }
             },
 
-            setYear() {
-                this.dom.currentYear.textContent = new Date().getFullYear();
-            }
+            setYear() { this.dom.currentYear.textContent = new Date().getFullYear(); }
         };
 
         const Calculadora = {
             calcular() {
                 const valorBruto = UI.parseCurrency(UI.dom.valorBruto.value);
-                const resultado = CalculatorService.calculate(valorBruto, AppState.impostos);
+                const resultado  = CalculatorService.calculate(valorBruto, AppState.impostos);
                 UI.atualizarResultados(resultado);
                 AppState.salvar();
             }
@@ -600,19 +726,18 @@
         const Eventos = {
             syncUIAndCalculate() {
                 AppState.impostos.forEach((imposto, i) => {
-                    const retemCheckbox = document.getElementById(`retem_${i}`);
-                    if (retemCheckbox) retemCheckbox.checked = imposto.retem;
+                    const cb = document.getElementById(`retem_${i}`);
+                    if (cb) cb.checked = imposto.retem;
                 });
                 Calculadora.calcular();
             },
 
             setup() {
-                // Eventos de Input na Tabela (Alíquota e Base)
+                // Tabela: alíquota e checkbox
                 UI.dom.tabelaImpostos.addEventListener('input', (e) => {
                     const index = parseInt(e.target.dataset.index, 10);
                     if (isNaN(index)) return;
                     const imposto = AppState.impostos[index];
-                    
                     if (e.target.type === 'checkbox') {
                         imposto.retem = e.target.checked;
                     } else if (e.target.id.startsWith('aliquota_')) {
@@ -621,38 +746,31 @@
                     Calculadora.calcular();
                 });
 
-                // Manipulação da BASE DE CÁLCULO (Blur)
+                // Base de cálculo (blur)
                 UI.dom.tabelaImpostos.addEventListener('blur', (e) => {
-                    if (e.target.id.startsWith('base_')) {
-                        const index = parseInt(e.target.dataset.index, 10);
-                        if (!isNaN(index)) {
-                            const rawVal = e.target.value.trim();
-                            const imposto = AppState.impostos[index];
-                            
-                            // Lógica de Estado: Vazio = Null (Auto), Texto = Valor
-                            if (rawVal === '') {
-                                imposto.baseCustom = null;
-                            } else {
-                                imposto.baseCustom = UI.parseCurrency(rawVal);
-                            }
-                            
-                            // Formata visualmente
-                            e.target.value = imposto.baseCustom !== null ? UI.formatarMoeda(imposto.baseCustom) : '';
-                            Calculadora.calcular();
-                        }
-                    }
+                    if (!e.target.id.startsWith('base_')) return;
+                    const index = parseInt(e.target.dataset.index, 10);
+                    if (isNaN(index)) return;
+                    const rawVal  = e.target.value.trim();
+                    const imposto = AppState.impostos[index];
+                    imposto.baseCustom = rawVal === '' ? null : UI.parseCurrency(rawVal);
+                    e.target.value = imposto.baseCustom !== null ? UI.formatarMoeda(imposto.baseCustom) : '';
+                    Calculadora.calcular();
                 }, true);
 
                 // Valor Bruto
                 UI.dom.valorBruto.addEventListener('blur', (e) => {
-                    const valor = UI.parseCurrency(e.target.value);
-                    UI.dom.valorBruto.value = UI.formatarMoeda(valor);
+                    UI.dom.valorBruto.value = UI.formatarMoeda(UI.parseCurrency(e.target.value));
                     Calculadora.calcular();
                 });
+                UI.dom.valorBruto.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') e.target.blur();
+                });
 
-                // Botões e Toggles
+                // Simples Nacional
                 UI.dom.simplesNacionalToggle.addEventListener('change', (e) => {
                     AppState.isSimplesNacional = e.target.checked;
+                    e.target.setAttribute('aria-checked', String(e.target.checked));
                     ['PIS', 'COFINS', 'CSLL'].forEach(code => {
                         const imp = AppState.impostos.find(i => i.code === code);
                         if (imp) imp.retem = !AppState.isSimplesNacional;
@@ -660,27 +778,24 @@
                     this.syncUIAndCalculate();
                 });
 
+                // Padrão
                 UI.dom.btnMarcarPadrao.addEventListener('click', () => {
                     const isSimples = AppState.isSimplesNacional;
-                    const defaults = AppState.impostos.filter(imp => imp.isDefault);
-                    const allActive = defaults.every(imp => imp.retem);
-                    
                     AppState.impostos.forEach(imp => {
-                        if (imp.isDefault) {
-                            const isFederal = ['PIS','COFINS','CSLL'].includes(imp.code);
-                            imp.retem = (isSimples && isFederal) ? false : !allActive;
-                        }
+                        if (!imp.isDefault) return;
+                        const isFederal = ['PIS','COFINS','CSLL'].includes(imp.code);
+                        imp.retem = (isSimples && isFederal) ? false : true;
                     });
                     this.syncUIAndCalculate();
                 });
 
+                // Técnica
                 UI.dom.btnMarcarTecnica.addEventListener('click', () => {
-                    AppState.impostos.forEach(imp => {
-                        if (imp.isSpecial) imp.retem = !imp.retem;
-                    });
+                    AppState.impostos.forEach(imp => { if (imp.isSpecial) imp.retem = !imp.retem; });
                     this.syncUIAndCalculate();
                 });
 
+                // Resetar
                 UI.dom.btnResetar.addEventListener('click', () => {
                     if (confirm('Restaurar configurações originais?')) {
                         AppState.resetar();
@@ -689,6 +804,19 @@
                         this.syncUIAndCalculate();
                     }
                 });
+
+                // Imprimir (abre modal)
+                UI.dom.btnImprimir.addEventListener('click', () => UI.abrirModalImpressao());
+
+                // Fechar modal
+                UI.dom.btnFecharModal.addEventListener('click', () => UI.fecharModalImpressao());
+                UI.dom.printModalOverlay.addEventListener('click', () => UI.fecharModalImpressao());
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') UI.fecharModalImpressao();
+                });
+
+                // Imprimir via browser
+                UI.dom.btnPrint.addEventListener('click', () => window.print());
 
                 UI.dom.themeToggle.addEventListener('click', () => UI.toggleTheme());
                 UI.dom.btnToggleTable.addEventListener('click', () => UI.toggleTable());
@@ -702,11 +830,9 @@
             UI.loadTheme();
             UI.setYear();
             Eventos.setup();
-            
-            // Inicializa valor bruto formatado
             UI.dom.valorBruto.value = UI.formatarMoeda(UI.parseCurrency(UI.dom.valorBruto.value));
             Calculadora.calcular();
-            console.log('✅ App v5.1.0 Ready');
+            console.log('✅ App v5.2.0 Ready');
         });
     </script>
 </body>
