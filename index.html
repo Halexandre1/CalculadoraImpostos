@@ -24,7 +24,6 @@
         .logo-img { transition: transform 0.2s ease; }
         .logo-img:hover { transform: scale(1.05); }
         .heart { color: #ef4444; animation: heartbeat 1.5s ease-in-out infinite; }
-        @keyframes heartbeat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
         .custom-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
         .dark .custom-scrollbar::-webkit-scrollbar-track { background: #334155; }
@@ -85,7 +84,46 @@
             #printContent { box-shadow: none !important; border-radius: 0 !important; max-width: 100% !important; width: 100% !important; border: none !important; }
             .no-print { display: none !important; }
         }
-    </style>
+    
+        .base-input-panel {
+            width: 100%;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 500;
+            color: #334155;
+            background: #f0f9ff;
+            border: 1.5px solid #bae6fd;
+            border-radius: 6px;
+            text-align: center;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .base-input-panel:focus {
+            outline: none;
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56,189,248,0.15);
+        }
+        .base-input-panel::placeholder {
+            color: #94a3b8;
+            font-weight: 400;
+            font-size: 10px;
+        }
+        .dark .base-input-panel {
+            background: #0c4a6e;
+            border-color: #0369a1;
+            color: #e0f2fe;
+        }
+        .dark .base-input-panel:focus {
+            border-color: #38bdf8;
+        }
+        .base-label-panel {
+            font-size: 9px;
+            text-align: center;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        </style>
 </head>
 <body class="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-gray-900 dark:to-gray-800 text-slate-800 dark:text-slate-200 min-h-screen p-4">
 
@@ -157,6 +195,8 @@
                             </div>
                             <input type="number" id="regimeIss" min="0" max="10" step="0.01" value="5.00" class="regime-input" />
                             <span id="labelIss" class="text-xs text-center font-semibold text-red-500">Não retém</span>
+                            <input type="text" id="basePanelIss" placeholder="Base: Valor bruto" class="base-input-panel" title="Base de cálculo reduzida para ISS. Deixe vazio para usar o valor bruto.">
+                            <span class="base-label-panel">Base ISS</span>
                         </div>
 
                         <!-- INSS -->
@@ -174,6 +214,8 @@
                                 <option value="11" selected>11,00%</option>
                             </select>
                             <span id="labelInss" class="text-xs text-center font-semibold text-red-500">Não retém</span>
+                            <input type="text" id="basePanelInss" placeholder="Base: Valor bruto" class="base-input-panel" title="Base de cálculo reduzida para INSS. Deixe vazio para usar o valor bruto.">
+                            <span class="base-label-panel">Base INSS</span>
                         </div>
 
                         <!-- IR -->
@@ -193,6 +235,8 @@
                                 <option value="3.00">3,00%</option>
                             </select>
                             <span id="labelIr" class="text-xs text-center font-semibold text-red-500">Não retém</span>
+                            <input type="text" id="basePanelIr" placeholder="Base: Valor bruto" class="base-input-panel" title="Base de cálculo reduzida para IR. Deixe vazio para usar o valor bruto.">
+                            <span class="base-label-panel">Base IR</span>
                         </div>
 
                         <!-- RETENÇÃO TÉCNICA -->
@@ -207,6 +251,8 @@
                             </div>
                             <input type="number" id="regimeTecnica" min="0" max="100" step="0.01" value="4.65" class="regime-input" />
                             <span id="labelTecnica" class="text-xs text-center font-semibold text-red-500">Não retém</span>
+                            <input type="text" id="basePanelTecnica" placeholder="Base: Valor bruto" class="base-input-panel" title="Base de cálculo reduzida para Ret. Técnica. Deixe vazio para usar o valor bruto.">
+                            <span class="base-label-panel">Base Ret. Técnica</span>
                         </div>
 
                     </div>
@@ -578,6 +624,14 @@
                 }
                 this.updateMiniToggle(code);
             });
+            // Sync base panel inputs from AppState
+            // Correção 1: O código aqui estava como 'RETENCAOTECNICA' sem o underline. Mudei para bater com o TaxConfig
+            const bpm = {'ISS':'basePanelIss','INSS':'basePanelInss','IR':'basePanelIr','RETENCAO_TECNICA':'basePanelTecnica'};
+            Object.entries(bpm).forEach(([code, inputId]) => {
+                const imp = AppState.impostos.find(i => i.code === code);
+                const el = document.getElementById(inputId);
+                if (imp && el) el.value = imp.baseCustom !== null ? this.formatarMoeda(imp.baseCustom) : '';
+            });
         },
 
         atualizarResultados(result) {
@@ -713,7 +767,7 @@
         },
 
         setup() {
-            // Tabela
+            // Tabela - Listeners de mudança
             UI.dom.tabelaImpostos.addEventListener('input',(e)=>{
                 const idx=parseInt(e.target.dataset.index,10);
                 if (isNaN(idx)) return;
@@ -729,6 +783,7 @@
                 Calculadora.calcular();
             });
 
+            // Tabela - Tratando a saída do campo Base e refletindo nos painéis superiores (Correção 2)
             UI.dom.tabelaImpostos.addEventListener('blur',(e)=>{
                 if (!e.target.id.startsWith('base_')) return;
                 const idx=parseInt(e.target.dataset.index,10);
@@ -736,6 +791,15 @@
                 const raw=e.target.value.trim(), imp=AppState.impostos[idx];
                 imp.baseCustom=raw===''?null:UI.parseCurrency(raw);
                 e.target.value=imp.baseCustom!==null?UI.formatarMoeda(imp.baseCustom):'';
+                
+                // Manda o valor para o card lá de cima se existir
+                const bpm = {'ISS':'basePanelIss','INSS':'basePanelInss','IR':'basePanelIr','RETENCAO_TECNICA':'basePanelTecnica'};
+                const topInputId = bpm[imp.code];
+                if (topInputId) {
+                    const topEl = document.getElementById(topInputId);
+                    if (topEl) topEl.value = e.target.value;
+                }
+
                 Calculadora.calcular();
             }, true);
 
@@ -753,6 +817,32 @@
                 const handler=()=>this.setAliquotaByCode(code, parseFloat(el.value)||0);
                 el.addEventListener('change', handler);
                 el.addEventListener('blur',   handler);
+            });
+
+            // Painel Bases superiores (Correção 3 - Faltava escutar as mudanças nos campos de base superiores)
+            const baseMapping = {
+                ISS: 'basePanelIss', INSS: 'basePanelInss', IR: 'basePanelIr', RETENCAO_TECNICA: 'basePanelTecnica'
+            };
+            Object.entries(baseMapping).forEach(([code, inputId]) => {
+                const el = document.getElementById(inputId);
+                if (!el) return;
+                const handler = (e) => {
+                    const raw = e.target.value.trim();
+                    const imp = AppState.impostos.find(i => i.code === code);
+                    if (imp) {
+                        imp.baseCustom = raw === '' ? null : UI.parseCurrency(raw);
+                        e.target.value = imp.baseCustom !== null ? UI.formatarMoeda(imp.baseCustom) : '';
+
+                        // Atualiza a tabela lá embaixo com a nova base digitada em cima
+                        const idx = AppState.impostos.findIndex(i => i.code === code);
+                        const tableEl = document.getElementById(`base_${idx}`);
+                        if (tableEl) tableEl.value = e.target.value;
+
+                        Calculadora.calcular();
+                    }
+                };
+                el.addEventListener('blur', handler);
+                el.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.target.blur(); });
             });
 
             // Mini toggles
@@ -814,7 +904,7 @@
         Eventos.setup();
         UI.dom.valorBruto.value=UI.formatarMoeda(UI.parseCurrency(UI.dom.valorBruto.value));
         Calculadora.calcular();
-        console.log('✅ App v5.5.0 Ready');
+        console.log('✅ App v5.5.0 Ready (Base Inputs Fixed)');
     });
 </script>
 </body>
